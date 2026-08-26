@@ -190,4 +190,3 @@ function SolitudeButton:Toggle(config)
 end
 
 getgenv().SolitudeButton = SolitudeButton
-return SolitudeButton
