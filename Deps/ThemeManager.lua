@@ -44,7 +44,7 @@ return function(Library)
 	}
 
 	ThemeManager.Presets = {
-		solitude   = { Bg = Color3.fromRGB(26, 26, 28),    Accent = Color3.fromRGB(158, 188, 2428) },
+		solitude   = { Bg = Color3.fromRGB(26, 26, 28),    Accent = Color3.fromRGB(158, 188, 242) },
 		darker     = { Bg = Color3.fromRGB(16, 16, 16),    Accent = Color3.fromRGB(72, 138, 182) },
 		typewriter = { Bg = Color3.fromRGB(34, 34, 34),    Accent = Color3.fromRGB(109, 180, 120) },
 		aqua       = { Bg = Color3.fromRGB(14, 22, 22),    Accent = Color3.fromRGB(60, 165, 165) },
