@@ -122,10 +122,10 @@ Library.NotificationLimit = 5
 Library.Dirty = false
 Library.BaseUrl = "https://raw.githubusercontent.com/mellow358/solitude-club/refs/heads/main/"
 Library.AddonPaths = {
-	Icons = "Deps/Icons.luau",
-	SaveManager = "Deps/SaveManager.luau",
-	InterfaceManager = "Deps/InterfaceManager.luau",
-	ThemeManager = "Deps/ThemeManager.luau",
+	Icons = "Deps/Icons.lua",
+	SaveManager = "Deps/SaveManager.lua",
+	InterfaceManager = "Deps/InterfaceManager.lua",
+	ThemeManager = "Deps/ThemeManager.lua",
 }
 Library.Addons = {}
 Library.Painted = Painted
@@ -140,7 +140,7 @@ function Library:SafeCallback(label, callback, ...)
 		local message = tostring(err)
 		local _, cut = string.find(message, ":%d+: ")
 		if cut then message = string.sub(message, cut + 1) end
-		warn("Solitude | callback error in '" .. tostring(label) .. "': " .. tostring(err))
+		warn("solitude.club | callback error in '" .. tostring(label) .. "': " .. tostring(err))
 		self:Error("callback error", tostring(label) .. " - " .. message, 7)
 	end)
 end
@@ -167,7 +167,7 @@ function Library:LoadAddon(name)
 	if module == nil then
 		local path = self.AddonPaths[name]
 		if not path then
-			warn("Solitude | unknown addon '" .. tostring(name) .. "'")
+			warn("solitude.club | unknown addon '" .. tostring(name) .. "'")
 			return nil
 		end
 		local fetched, source = pcall(function() return game:HttpGet(self.BaseUrl .. path) end)
@@ -181,7 +181,7 @@ function Library:LoadAddon(name)
 	end
 
 	if module == nil then
-		warn("Solitude | addon '" .. tostring(name) .. "' unavailable")
+		warn("solitude.club | addon '" .. tostring(name) .. "' unavailable")
 		return nil
 	end
 	if type(module) == "function" then
@@ -203,7 +203,7 @@ end
 
 function Library:Repaint()
 	if #Painted == 0 then
-		warn("Solitude | repaint registry is empty, main.luau is probably outdated")
+		warn("solitude.club | repaint registry is empty, main.lua is probably outdated")
 	end
 	IndexTheme()
 	for i = #Painted, 1, -1 do
@@ -231,7 +231,7 @@ end
 
 function Library:Register(flag, entry)
 	if self.Registry[flag] then
-		warn("Solitude | duplicate flag '" .. tostring(flag) .. "', the previous element will no longer be saved")
+		warn("solitude.club | duplicate flag '" .. tostring(flag) .. "', the previous element will no longer be saved")
 	end
 	self.Registry[flag] = entry
 	self.Defaults[flag] = entry.Get()
