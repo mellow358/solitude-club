@@ -57,13 +57,32 @@ return function(Library)
 		return true, file
 	end
 
+	-- Wraps any full config replay (load file, paste, reset defaults) so the
+	-- theme preset dropdown can't stomp individually-saved colors depending
+	-- on Lua's unspecified pairs() iteration order. See ThemeManager.Suppress.
+	function SaveManager:ApplyConfig(fn)
+		local themeManager = self.Library.ThemeManager
+		if themeManager then themeManager.Suppress = true end
+
+		fn()
+
+		if themeManager then
+			themeManager.Suppress = false
+			self.Library:Repaint()
+		end
+	end
+
 	function SaveManager:Load(file)
 		if type(file) ~= "string" or file == "" then return false, "no config" end
 		local raw = FileSystem:Read(self:Path(file))
 		if not raw then return false, "not found" end
 		local ok, data = pcall(function() return HttpService:JSONDecode(raw) end)
 		if not ok then return false, "corrupted file" end
-		self.Library:LoadConfig(data, self.Ignore)
+
+		self:ApplyConfig(function()
+			self.Library:LoadConfig(data, self.Ignore)
+		end)
+
 		return true, file
 	end
 
@@ -222,7 +241,9 @@ return function(Library)
 					if not reader then return notify(false, "clipboard unavailable", "") end
 					local ok, data = pcall(function() return HttpService:JSONDecode(reader()) end)
 					if not ok or type(data) ~= "table" then return notify(false, "invalid clipboard", "") end
-					self.Library:LoadConfig(data, self.Ignore)
+					self:ApplyConfig(function()
+						self.Library:LoadConfig(data, self.Ignore)
+					end)
 					notify(true, "config applied", "pasted")
 				end,
 			},
@@ -232,7 +253,9 @@ return function(Library)
 			{
 				Text = "reset defaults",
 				Callback = function()
-					self.Library:ResetDefaults(self.Ignore)
+					self:ApplyConfig(function()
+						self.Library:ResetDefaults(self.Ignore)
+					end)
 					notify(true, "defaults restored", "reset")
 				end,
 			},

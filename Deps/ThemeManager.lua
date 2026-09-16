@@ -178,43 +178,46 @@ return function(Library)
 		local preset = self.Presets[name]
 		if not preset then return false end
 
-		local bg = preset.Bg
-		local step = preset.Light and -1 or 1
+		if not self.Suppress then
+			local bg = preset.Bg
+			local step = preset.Light and -1 or 1
 
-		Theme.Window = bg
-		Theme.TopBar = shade(bg, 5 * step)
-		Theme.Section = shade(bg, 3 * step)
-		Theme.Group = shade(bg, 8 * step)
-		Theme.Field = shade(bg, 14 * step)
-		Theme.FieldHover = shade(bg, 22 * step)
-		Theme.PopupBg = shade(bg, 12 * step)
-		Theme.Track = shade(bg, 32 * step)
+			Theme.Window = bg
+			Theme.TopBar = shade(bg, 5 * step)
+			Theme.Section = shade(bg, 3 * step)
+			Theme.Group = shade(bg, 8 * step)
+			Theme.Field = shade(bg, 14 * step)
+			Theme.FieldHover = shade(bg, 22 * step)
+			Theme.PopupBg = shade(bg, 12 * step)
+			Theme.Track = shade(bg, 32 * step)
 
-		Theme.WindowBorder = shade(bg, 26 * step)
-		Theme.SectionBorder = shade(bg, 20 * step)
-		Theme.GroupBorder = shade(bg, 28 * step)
-		Theme.Border = shade(bg, 34 * step)
-		Theme.BorderSoft = shade(bg, 19 * step)
-		Theme.PopupBorder = shade(bg, 36 * step)
+			Theme.WindowBorder = shade(bg, 26 * step)
+			Theme.SectionBorder = shade(bg, 20 * step)
+			Theme.GroupBorder = shade(bg, 28 * step)
+			Theme.Border = shade(bg, 34 * step)
+			Theme.BorderSoft = shade(bg, 19 * step)
+			Theme.PopupBorder = shade(bg, 36 * step)
 
-		if preset.Light then
-			Theme.Text = Color3.fromRGB(70, 70, 76)
-			Theme.TextDim = Color3.fromRGB(122, 122, 130)
-			Theme.TextBright = Color3.fromRGB(24, 24, 28)
-			Theme.TextMarked = Color3.fromRGB(158, 132, 30)
-			Theme.TextCode = Color3.fromRGB(38, 138, 60)
-			Theme.Danger = Color3.fromRGB(196, 58, 58)
-		else
-			Theme.Text = Color3.fromRGB(174, 174, 178)
-			Theme.TextDim = Color3.fromRGB(108, 108, 113)
-			Theme.TextBright = Color3.fromRGB(228, 228, 232)
-			Theme.TextMarked = Color3.fromRGB(198, 198, 122)
-			Theme.TextCode = Color3.fromRGB(96, 200, 96)
-			Theme.Danger = Color3.fromRGB(226, 102, 102)
+			if preset.Light then
+				Theme.Text = Color3.fromRGB(70, 70, 76)
+				Theme.TextDim = Color3.fromRGB(122, 122, 130)
+				Theme.TextBright = Color3.fromRGB(24, 24, 28)
+				Theme.TextMarked = Color3.fromRGB(158, 132, 30)
+				Theme.TextCode = Color3.fromRGB(38, 138, 60)
+				Theme.Danger = Color3.fromRGB(196, 58, 58)
+			else
+				Theme.Text = Color3.fromRGB(174, 174, 178)
+				Theme.TextDim = Color3.fromRGB(108, 108, 113)
+				Theme.TextBright = Color3.fromRGB(228, 228, 232)
+				Theme.TextMarked = Color3.fromRGB(198, 198, 122)
+				Theme.TextCode = Color3.fromRGB(96, 200, 96)
+				Theme.Danger = Color3.fromRGB(226, 102, 102)
+			end
+
+			self:SetAccent(preset.Accent)
 		end
 
 		self.Current = name
-		self:SetAccent(preset.Accent)
 		return true
 	end
 
@@ -489,7 +492,7 @@ return function(Library)
 					Duration = 3,
 				})
 				if ok and customList then
-					customList:SetValues(self:ListCustomThemes())
+					customList:SetOptions(self:ListCustomThemes())
 					customList:Set(name, true)
 				end
 			end,
@@ -548,7 +551,7 @@ return function(Library)
 						Duration = 3,
 					})
 					if ok then
-						customList:SetValues(self:ListCustomThemes())
+						customList:SetOptions(self:ListCustomThemes())
 						customList:Set(nil, true)
 					end
 				end,
@@ -556,7 +559,7 @@ return function(Library)
 			{
 				Text = "refresh list",
 				Callback = function()
-					customList:SetValues(self:ListCustomThemes())
+					customList:SetOptions(self:ListCustomThemes())
 				end,
 			},
 		})
