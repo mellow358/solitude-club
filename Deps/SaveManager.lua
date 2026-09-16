@@ -9,7 +9,7 @@ return function(Library)
 
 	local SaveManager = {}
 	SaveManager.Library = Library
-	SaveManager.Folder = "Solitude"
+	SaveManager.Folder = "solitude.club"
 	SaveManager.Ignore = {}
 	SaveManager.Format = "json"
 
@@ -41,7 +41,12 @@ return function(Library)
 	end
 
 	function SaveManager:List()
-		return FileSystem:List(self.Folder .. "/configs")
+		local names = FileSystem:List(self.Folder .. "/configs")
+		local filtered = {}
+		for _, name in ipairs(names) do
+			if name ~= "autoload.txt" then table.insert(filtered, name) end
+		end
+		return filtered
 	end
 
 	function SaveManager:Save(name)
@@ -94,7 +99,7 @@ return function(Library)
 	end
 
 	function SaveManager:AutoloadPath()
-		return self.Folder .. "/settings/autoload.txt"
+		return self.Folder .. "/configs/autoload.txt"
 	end
 
 	function SaveManager:GetAutoload()

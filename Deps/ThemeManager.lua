@@ -35,7 +35,7 @@ return function(Library)
 
 	local ThemeManager = {}
 	ThemeManager.Library = Library
-	ThemeManager.Folder = "Solitude"
+	ThemeManager.Folder = "solitude.club"
 	ThemeManager.Flags = { "theme_preset", "theme_accent" }
 	ThemeManager.AutoSave = false
 	ThemeManager.Current = "solitude"
@@ -133,11 +133,15 @@ return function(Library)
 	end
 
 	function ThemeManager:Path()
-		return self.Folder .. "/settings/theme.json"
+		return self.Folder .. "/themes/theme.json"
+	end
+
+	function ThemeManager:ThemesFolderPath()
+		return self.Folder .. "/themes"
 	end
 
 	function ThemeManager:CustomFolderPath()
-		return self.Folder .. "/settings/customthemes"
+		return self.Folder .. "/themes/customthemes"
 	end
 
 	function ThemeManager:CustomPath(name)
@@ -145,16 +149,15 @@ return function(Library)
 	end
 
 	function ThemeManager:EnsureCustomFolder()
-		-- Prefer the library's own filesystem abstraction if it exposes folder creation,
-		-- fall back to raw executor globals so this still works standalone.
-		local fs = self.Library.FileSystem
-		if fs and fs.BuildFolders then
-			pcall(function() fs:BuildFolders(self:CustomFolderPath()) end)
-		elseif makefolder and isfolder then
-			if not isfolder(self:CustomFolderPath()) then
-				pcall(makefolder, self:CustomFolderPath())
-			end
+		-- Library:BuildFolders only creates <folder>/configs and <folder>/settings,
+		-- so the themes/ tree needs to be built by hand, parent folder first.
+		if not (makefolder and isfolder) then return end
+		local function ensure(path)
+			local ok, exists = pcall(isfolder, path)
+			if ok and not exists then pcall(makefolder, path) end
 		end
+		ensure(self:ThemesFolderPath())
+		ensure(self:CustomFolderPath())
 	end
 
 	function ThemeManager:Names()
