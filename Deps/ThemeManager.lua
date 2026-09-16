@@ -1,9 +1,37 @@
 -- Solitude addon | ThemeManager
--- Presets de couleurs, edition par element, recoloration a chaud.
+-- Presets de couleurs, edition par element, recoloration a chaud, themes custom.
 
 return function(Library)
 	local HttpService = game:GetService("HttpService")
 	local Theme = Library.Theme
+
+	-- // Safety wrappers for filesystem globals (some executors return errors instead of booleans) \\ --
+	local isfolder, isfile, listfiles, delfile, writefile, readfile, makefolder =
+		isfolder, isfile, listfiles, delfile, writefile, readfile, makefolder
+
+	if typeof(copyfunction) == "function" and isfolder and isfile and listfiles then
+		local isfolder_copy, isfile_copy, listfiles_copy =
+			copyfunction(isfolder), copyfunction(isfile), copyfunction(listfiles)
+
+		local ok, result = pcall(function()
+			return isfolder_copy("solitude_probe_" .. tostring(math.random(1000000, 9999999)))
+		end)
+
+		if not ok or typeof(result) ~= "boolean" then
+			isfolder = function(folder)
+				local success, data = pcall(isfolder_copy, folder)
+				return (success and data) or false
+			end
+			isfile = function(file)
+				local success, data = pcall(isfile_copy, file)
+				return (success and data) or false
+			end
+			listfiles = function(folder)
+				local success, data = pcall(listfiles_copy, folder)
+				return (success and data) or {}
+			end
+		end
+	end
 
 	local ThemeManager = {}
 	ThemeManager.Library = Library
@@ -12,31 +40,37 @@ return function(Library)
 	ThemeManager.AutoSave = false
 	ThemeManager.Current = "solitude"
 
+	-- { Theme key, label, flag suffix }
 	ThemeManager.Keys = {
-		{ "Accent", "accent" },
-		{ "AccentSoft", "accent hover" },
-		{ "AccentDim", "accent dim" },
-		{ "Window", "window bg" },
-		{ "WindowBorder", "window border" },
-		{ "TopBar", "topbar bg" },
-		{ "Section", "card bg" },
-		{ "SectionBorder", "card border" },
-		{ "Group", "group bg" },
-		{ "GroupBorder", "group border" },
-		{ "Field", "control bg" },
-		{ "FieldHover", "control hover" },
-		{ "Border", "control border" },
-		{ "BorderSoft", "divider" },
-		{ "PopupBg", "popup bg" },
-		{ "PopupBorder", "popup border" },
-		{ "Track", "slider track" },
-		{ "Text", "text" },
-		{ "TextDim", "text dim" },
-		{ "TextBright", "text bright" },
-		{ "TextMarked", "text warning" },
-		{ "TextCode", "text success" },
-		{ "Danger", "text danger" },
+		{ "Accent", "accent", "accent" },
+		{ "AccentSoft", "accent hover", "accent_soft" },
+		{ "AccentDim", "accent dim", "accent_dim" },
+		{ "Window", "window bg", "window" },
+		{ "WindowBorder", "window border", "window_border" },
+		{ "TopBar", "topbar bg", "topbar" },
+		{ "Section", "card bg", "section" },
+		{ "SectionBorder", "card border", "section_border" },
+		{ "Group", "group bg", "group" },
+		{ "GroupBorder", "group border", "group_border" },
+		{ "Field", "control bg", "field" },
+		{ "FieldHover", "control hover", "field_hover" },
+		{ "Border", "control border", "border" },
+		{ "BorderSoft", "divider", "border_soft" },
+		{ "PopupBg", "popup bg", "popup_bg" },
+		{ "PopupBorder", "popup border", "popup_border" },
+		{ "Track", "slider track", "track" },
+		{ "Text", "text", "text" },
+		{ "TextDim", "text dim", "text_dim" },
+		{ "TextBright", "text bright", "text_bright" },
+		{ "TextMarked", "text warning", "text_marked" },
+		{ "TextCode", "text success", "text_code" },
+		{ "Danger", "text danger", "danger" },
 	}
+
+	-- Build the full flag list once (theme_preset, theme_accent, theme_color_<key>...)
+	for _, entry in ipairs(ThemeManager.Keys) do
+		table.insert(ThemeManager.Flags, "theme_color_" .. entry[3])
+	end
 
 	ThemeManager.Order = {
 		"solitude", "darker", "typewriter", "aqua",
@@ -95,10 +129,32 @@ return function(Library)
 	function ThemeManager:SetFolder(folder)
 		self.Folder = folder
 		self.Library:BuildFolders(folder)
+		self:EnsureCustomFolder()
 	end
 
 	function ThemeManager:Path()
 		return self.Folder .. "/settings/theme.json"
+	end
+
+	function ThemeManager:CustomFolderPath()
+		return self.Folder .. "/settings/customthemes"
+	end
+
+	function ThemeManager:CustomPath(name)
+		return self:CustomFolderPath() .. "/" .. name .. ".json"
+	end
+
+	function ThemeManager:EnsureCustomFolder()
+		-- Prefer the library's own filesystem abstraction if it exposes folder creation,
+		-- fall back to raw executor globals so this still works standalone.
+		local fs = self.Library.FileSystem
+		if fs and fs.BuildFolders then
+			pcall(function() fs:BuildFolders(self:CustomFolderPath()) end)
+		elseif makefolder and isfolder then
+			if not isfolder(self:CustomFolderPath()) then
+				pcall(makefolder, self:CustomFolderPath())
+			end
+		end
 	end
 
 	function ThemeManager:Names()
@@ -162,6 +218,8 @@ return function(Library)
 		return true
 	end
 
+	-- // Session save/load (used by AutoSave, "save theme" button) \\ --
+
 	function ThemeManager:Save()
 		local alphas = self.Library.ThemeAlpha or {}
 		local colors = {}
@@ -193,6 +251,137 @@ return function(Library)
 		end
 		return true
 	end
+
+	-- // Custom named themes (create / load / overwrite / delete / list) \\ --
+
+	function ThemeManager:ListCustomThemes()
+		self:EnsureCustomFolder()
+
+		local fs = self.Library.FileSystem
+		local files
+
+		if fs and fs.List then
+			local ok, result = pcall(function() return fs:List(self:CustomFolderPath()) end)
+			files = (ok and result) or {}
+		elseif listfiles then
+			local ok, result = pcall(listfiles, self:CustomFolderPath())
+			files = (ok and result) or {}
+		else
+			files = {}
+		end
+
+		local names = {}
+		for _, file in ipairs(files) do
+			local name = file:match("([^/\\]+)%.json$")
+			if name then table.insert(names, name) end
+		end
+		table.sort(names)
+		return names
+	end
+
+	function ThemeManager:SaveCustomTheme(name)
+		if not name or name:gsub("%s", "") == "" then
+			self.Library:Notify({ Title = "theme error", Text = "custom theme name is empty", Duration = 3 })
+			return false
+		end
+
+		self:EnsureCustomFolder()
+
+		local alphas = self.Library.ThemeAlpha or {}
+		local colors = {}
+		for _, entry in ipairs(self.Keys) do
+			colors[entry[1]] = toHex(Theme[entry[1]], alphas[entry[1]])
+		end
+
+		local ok, encoded = pcall(function()
+			return HttpService:JSONEncode({
+				Name = name,
+				BasedOn = self.Current,
+				Colors = colors,
+			})
+		end)
+		if not ok then return false end
+
+		local fs = self.Library.FileSystem
+		local writeOk
+		if fs and fs.Write then
+			writeOk = select(1, pcall(function() fs:Write(self:CustomPath(name), encoded) end))
+		elseif writefile then
+			writeOk = select(1, pcall(writefile, self:CustomPath(name), encoded))
+		else
+			writeOk = false
+		end
+
+		return writeOk
+	end
+
+	function ThemeManager:GetCustomTheme(name)
+		if not name then return nil end
+
+		local fs = self.Library.FileSystem
+		local raw
+
+		if fs and fs.Read then
+			local ok, result = pcall(function() return fs:Read(self:CustomPath(name)) end)
+			raw = ok and result or nil
+		elseif isfile and readfile then
+			if isfile(self:CustomPath(name)) then
+				local ok, result = pcall(readfile, self:CustomPath(name))
+				raw = ok and result or nil
+			end
+		end
+
+		if not raw then return nil end
+
+		local ok, data = pcall(function() return HttpService:JSONDecode(raw) end)
+		if not ok or type(data) ~= "table" then return nil end
+		return data
+	end
+
+	function ThemeManager:LoadCustomTheme(name)
+		local data = self:GetCustomTheme(name)
+		if not data then return false end
+
+		-- Start from the base preset it was created on (or current preset) so any
+		-- keys the custom file doesn't override still land somewhere sane.
+		if data.BasedOn and self.Presets[data.BasedOn] then
+			self:Apply(data.BasedOn)
+		end
+
+		for key, hex in pairs(data.Colors or {}) do
+			local color, alpha = fromHex(hex)
+			if color and Theme[key] ~= nil then
+				self.Library:SetColor(key, color, alpha)
+				if key == "Accent" then self:SetAccent(color) end
+			end
+		end
+
+		self.Current = name
+		self.Library:Repaint()
+		return true
+	end
+
+	function ThemeManager:DeleteCustomTheme(name)
+		if not name then return false, "no theme selected" end
+
+		local path = self:CustomPath(name)
+		local fs = self.Library.FileSystem
+
+		if fs and fs.Delete then
+			local ok = pcall(function() fs:Delete(path) end)
+			if not ok then return false, "delete file error" end
+			return true
+		elseif isfile and delfile then
+			if not isfile(path) then return false, "invalid file" end
+			local ok = pcall(delfile, path)
+			if not ok then return false, "delete file error" end
+			return true
+		end
+
+		return false, "no filesystem access"
+	end
+
+	-- // UI \\ --
 
 	function ThemeManager:BuildThemeSection(tab, column)
 		local section = tab:Section("theme", column or 2)
@@ -229,10 +418,10 @@ return function(Library)
 		section:Divider()
 
 		for _, entry in ipairs(self.Keys) do
-			local key, label = entry[1], entry[2]
+			local key, label, flagSuffix = entry[1], entry[2], entry[3]
 			pickers[key] = section:ColorPicker({
 				Text = label,
-				Flag = false,
+				Flag = "theme_color_" .. flagSuffix,
 				Default = Theme[key],
 				DefaultAlpha = alphas[key] or 1,
 				Callback = function(color, alpha)
@@ -276,8 +465,105 @@ return function(Library)
 			},
 		})
 
+		-- // Custom themes \\ --
+
+		section:Divider()
+		section:Label("custom themes")
+
+		local customList
+		local customNameInput = section:Input({
+			Text = "theme name",
+			Flag = false,
+			Placeholder = "my theme",
+			ClearOnFocus = false,
+		})
+
+		section:Button({
+			Text = "create theme",
+			Callback = function()
+				local name = customNameInput:Get()
+				local ok = self:SaveCustomTheme(name)
+				self.Library:Notify({
+					Title = ok and "theme created" or "theme error",
+					Text = ok and string.format("saved %q", name) or "failed to save theme",
+					Duration = 3,
+				})
+				if ok and customList then
+					customList:SetValues(self:ListCustomThemes())
+					customList:Set(name, true)
+				end
+			end,
+		})
+
+		section:Divider()
+
+		customList = section:Dropdown({
+			Text = "custom themes",
+			Flag = "theme_custom_selected",
+			Options = self:ListCustomThemes(),
+			AllowNull = true,
+			Search = true,
+		})
+
+		section:ButtonRow({
+			{
+				Text = "load theme",
+				Callback = function()
+					local name = customList:Get()
+					if not name or name == "" then return end
+					local ok = self:LoadCustomTheme(name)
+					syncPickers()
+					if presetBox then presetBox:Set(name, true) end
+					self.Library:Notify({
+						Title = ok and "theme loaded" or "theme error",
+						Text = ok and string.format("loaded %q", name) or "failed to load theme",
+						Duration = 3,
+					})
+				end,
+			},
+			{
+				Text = "overwrite theme",
+				Callback = function()
+					local name = customList:Get()
+					if not name or name == "" then return end
+					local ok = self:SaveCustomTheme(name)
+					self.Library:Notify({
+						Title = ok and "theme overwritten" or "theme error",
+						Text = ok and string.format("overwrote %q", name) or "failed to overwrite theme",
+						Duration = 3,
+					})
+				end,
+			},
+		})
+
+		section:ButtonRow({
+			{
+				Text = "delete theme",
+				Callback = function()
+					local name = customList:Get()
+					local ok, err = self:DeleteCustomTheme(name)
+					self.Library:Notify({
+						Title = ok and "theme deleted" or "theme error",
+						Text = ok and string.format("deleted %q", name) or tostring(err),
+						Duration = 3,
+					})
+					if ok then
+						customList:SetValues(self:ListCustomThemes())
+						customList:Set(nil, true)
+					end
+				end,
+			},
+			{
+				Text = "refresh list",
+				Callback = function()
+					customList:SetValues(self:ListCustomThemes())
+				end,
+			},
+		})
+
 		self.Section = section
 		self.Pickers = pickers
+		self.CustomList = customList
 		return section
 	end
 
