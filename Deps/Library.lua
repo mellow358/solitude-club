@@ -3928,7 +3928,6 @@ function Library:BuildFolders(folder)
 		FileSystem:MakeFolder(path)
 	end
 	FileSystem:MakeFolder(folder .. "/configs")
-	FileSystem:MakeFolder(folder .. "/settings")
 	return folder
 end
 
