@@ -1543,6 +1543,7 @@ end
 function BuildColorPicker(owner, swatch, opts)
 	opts = opts or {}
 	local flag = FlagOf(opts)
+	local alphaFlag = opts.AlphaFlag
 	local useAlpha = opts.Alpha ~= false
 	local base = opts.Default or Color3.fromRGB(255, 255, 255)
 	local alpha = opts.DefaultAlpha or 1
@@ -1720,8 +1721,12 @@ function BuildColorPicker(owner, swatch, opts)
 		end
 		if not editing then hexBox.Text = ToHex(color, alpha) end
 		if flag then
-			Library.Flags[flag] = ToHex(color, alpha)
+			Library.Flags[flag] = color
 			Library:MarkDirty(flag)
+		end
+		if alphaFlag then
+			Library.Flags[alphaFlag] = alpha
+			Library:MarkDirty(alphaFlag)
 		end
 	end
 
@@ -1792,11 +1797,24 @@ function BuildColorPicker(owner, swatch, opts)
 	Library:OnRepaint(render)
 
 	if flag then
-		Library.Flags[flag] = ToHex(base, alpha)
+		Library.Flags[flag] = base
 		Library:Register(flag, {
 			Type = "ColorPicker",
 			Get = function() return ToHex(current(), alpha) end,
 			Set = function(v) api:Set(v) end,
+		})
+	end
+
+	if alphaFlag then
+		Library.Flags[alphaFlag] = alpha
+		Library:Register(alphaFlag, {
+			Type = "ColorPickerAlpha",
+			Get = function() return alpha end,
+			Set = function(v)
+				if typeof(v) == "number" then
+					api:Set(current(), v)
+				end
+			end,
 		})
 	end
 
