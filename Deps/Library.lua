@@ -1543,10 +1543,20 @@ end
 function BuildColorPicker(owner, swatch, opts)
 	opts = opts or {}
 	local flag = FlagOf(opts)
-	local alphaFlag = opts.AlphaFlag
-	local useAlpha = opts.Alpha ~= false
+	
+	local transparencyFlag = opts.TransparencyFlag or opts.AlphaFlag
+	local useTransparency  = (opts.Transparency ~= false) and (opts.Alpha ~= false)
 	local base = opts.Default or Color3.fromRGB(255, 255, 255)
-	local alpha = opts.DefaultAlpha or 1
+	
+	local transparency
+	if opts.DefaultTransparency ~= nil then
+		transparency = opts.DefaultTransparency
+	elseif opts.DefaultAlpha ~= nil then
+		transparency = 1 - opts.DefaultAlpha
+	else
+		transparency = 0
+	end
+	transparency = math.clamp(transparency, 0, 1)
 	local hue, sat, val = base:ToHSV()
 
 	local panel = owner.Window:CreateFloating(198, false, owner.Float)
@@ -1635,7 +1645,7 @@ function BuildColorPicker(owner, swatch, opts)
 	Corner(hueCursor, 2)
 
 	local alphaBar, alphaCursor, alphaGradient
-	if useAlpha then
+	if useTransparency then
 		local track = New("Frame", {
 			Size = UDim2.new(1, 0, 0, 10),
 			BackgroundColor3 = Theme.Track,
@@ -1689,7 +1699,7 @@ function BuildColorPicker(owner, swatch, opts)
 		Size = UDim2.new(1, -16, 1, 0),
 		Position = UDim2.fromOffset(8, 0),
 		BackgroundTransparency = 1,
-		Text = ToHex(base, alpha),
+		Text = ToHex(base, 1 - transparency),
 		TextColor3 = Theme.TextBright,
 		TextSize = 12,
 		Font = Theme.Font,
@@ -1699,7 +1709,7 @@ function BuildColorPicker(owner, swatch, opts)
 		Parent = hexField,
 	})
 
-	local api = { Instance = swatch, Swatch = swatch, Color = base, Alpha = alpha }
+	local api = { Instance = swatch, Swatch = swatch, Color = base, Transparency = transparency }
 	local editing = false
 
 	local function current()
@@ -1709,47 +1719,52 @@ function BuildColorPicker(owner, swatch, opts)
 	local function render()
 		local color = current()
 		api.Color = color
-		api.Alpha = alpha
+		api.Transparency = transparency
 		sv.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
 		svCursor.Position = UDim2.fromScale(sat, 1 - val)
 		hueCursor.Position = UDim2.new(0.5, 0, hue, 0)
 		swatch.BackgroundColor3 = color
-		swatch.BackgroundTransparency = useAlpha and (1 - alpha) * 0.75 or 0
+		swatch.BackgroundTransparency = useTransparency and (transparency * 0.75) or 0
 		if alphaGradient then
 			alphaGradient.Color = ColorSequence.new(color)
-			alphaCursor.Position = UDim2.new(alpha, 0, 0.5, 0)
+			alphaCursor.Position = UDim2.new(1 - transparency, 0, 0.5, 0)
 		end
-		if not editing then hexBox.Text = ToHex(color, alpha) end
+		if not editing then hexBox.Text = ToHex(color, 1 - transparency) end
 		if flag then
 			Library.Flags[flag] = color
 			Library:MarkDirty(flag)
 		end
-		if alphaFlag then
-			Library.Flags[alphaFlag] = alpha
-			Library:MarkDirty(alphaFlag)
+		if transparencyFlag then
+			Library.Flags[transparencyFlag] = transparency
+			Library:MarkDirty(transparencyFlag)
 		end
 	end
 
 	local function fire()
-		Library:SafeCallback(opts.Text or "color picker", opts.Callback, current(), alpha)
+		Library:SafeCallback(opts.Text or "color picker", opts.Callback, current(), transparency)
 	end
 
-	function api:Set(color, newAlpha, silent)
+	function api:Set(color, newTransparency, silent)
 		local parsed, parsedAlpha = FromHex(color)
 		if parsed then
 			color = parsed
-			newAlpha = newAlpha or parsedAlpha
+			-- hex returns alpha (1 = opaque); convert to transparency unless caller gave one
+			if newTransparency == nil then
+				newTransparency = 1 - parsedAlpha
+			end
 		end
 		if typeof(color) == "Color3" then
 			hue, sat, val = color:ToHSV()
 		end
-		if newAlpha then alpha = math.clamp(newAlpha, 0, 1) end
+		if newTransparency ~= nil then
+			transparency = math.clamp(newTransparency, 0, 1)
+		end
 		render()
 		if not silent then fire() end
 	end
 
 	function api:Get()
-		return current(), alpha
+		return current(), transparency
 	end
 
 	BindDrag(sv, function(position)
@@ -1767,7 +1782,8 @@ function BuildColorPicker(owner, swatch, opts)
 
 	if alphaBar then
 		BindDrag(alphaBar, function(position)
-			alpha = math.clamp((position.X - alphaBar.AbsolutePosition.X) / math.max(alphaBar.AbsoluteSize.X, 1), 0, 1)
+			local alpha = math.clamp((position.X - alphaBar.AbsolutePosition.X) / math.max(alphaBar.AbsoluteSize.X, 1), 0, 1)
+			transparency = 1 - alpha
 			render()
 			fire()
 		end)
@@ -1782,7 +1798,7 @@ function BuildColorPicker(owner, swatch, opts)
 		Tween(hexStroke, { Color = Theme.Border }, EASE_FAST)
 		local parsed, parsedAlpha = FromHex(hexBox.Text)
 		if parsed then
-			api:Set(parsed, parsedAlpha)
+			api:Set(parsed, 1 - parsedAlpha)
 		else
 			render()
 		end
@@ -1800,16 +1816,16 @@ function BuildColorPicker(owner, swatch, opts)
 		Library.Flags[flag] = base
 		Library:Register(flag, {
 			Type = "ColorPicker",
-			Get = function() return ToHex(current(), alpha) end,
+			Get = function() return ToHex(current(), 1 - transparency) end,
 			Set = function(v) api:Set(v) end,
 		})
 	end
 
-	if alphaFlag then
-		Library.Flags[alphaFlag] = alpha
-		Library:Register(alphaFlag, {
-			Type = "ColorPickerAlpha",
-			Get = function() return alpha end,
+	if transparencyFlag then
+		Library.Flags[transparencyFlag] = transparency
+		Library:Register(transparencyFlag, {
+			Type = "ColorPickerTransparency",
+			Get = function() return transparency end,
 			Set = function(v)
 				if typeof(v) == "number" then
 					api:Set(current(), v)
