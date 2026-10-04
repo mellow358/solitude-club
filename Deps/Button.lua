@@ -63,7 +63,7 @@ function SolitudeButton:Toggle(config)
 	local Text = config.Text or Name
 	local Callback = config.Callback
 	local SizeMultiply = config.SizeMultiply or 1
-	local AccentColor = config.AccentColor or Color3.fromRGB(189, 172, 255)
+	local AccentColor = config.AccentColor or Color3.fromRGB(158, 188, 242)
 	local IconOn = config.IconOn or "rbxassetid://10735024209"
 	local IconOff = config.IconOff or "rbxassetid://10734923214"
 
@@ -190,3 +190,4 @@ function SolitudeButton:Toggle(config)
 end
 
 getgenv().SolitudeButton = SolitudeButton
+return SolitudeButton
