@@ -60,7 +60,7 @@ local Games = {
 	},
 	{
 		Name = "da hood copies",
-		Description = "uses solitude.club old loader",
+		Description = "uses reformation.gg old loader",
 		Icon = "rbxassetid://89122179205544",
 		Load = function()
 			for _, blockedId in ipairs(DAHOOD_BLOCKED) do
@@ -81,7 +81,7 @@ local Games = {
 	},
 	{
 		Name = "prison life",
-		Description = "uses solitude.club old loader",
+		Description = "uses reformation.gg old loader",
 		Icon = "rbxassetid://109100556780679",
 		Load = function()
 			local allowed = false
