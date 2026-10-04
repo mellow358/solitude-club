@@ -403,7 +403,7 @@ return function(Library)
 
 		local function syncPickers()
 			for key, picker in pairs(pickers) do
-				picker:Set(Theme[key], alphas[key] or 1, true)
+				picker:Set(Theme[key], 1 - (alphas[key] or 1), true)
 			end
 		end
 
@@ -430,8 +430,8 @@ return function(Library)
 				Flag = "theme_color_" .. flagSuffix,
 				Default = Theme[key],
 				DefaultAlpha = alphas[key] or 1,
-				Callback = function(color, alpha)
-					self.Library:SetColor(key, color, alpha)
+				Callback = function(color, transparency)
+					self.Library:SetColor(key, color, 1 - transparency)
 					if key == "Accent" then
 						self:SetAccent(color)
 						syncPickers()
