@@ -104,7 +104,7 @@ local Games = {
 		Description = "release estimated time: unknown",
 		Icon = "rbxassetid://80523481507824",
 		Load = function()
-			print("rivals loaded")
+			LocalPlayer:Kick("[solitude.club] Coming soon.")
 		end,
 	},
 }
