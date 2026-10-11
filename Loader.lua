@@ -55,7 +55,7 @@ local Games = {
     				return
     			end
     		end
-            loadstring(game:HttpGet("https://api.polsec.sh/loader/55646c593e9f5876/69c53274fcb3f6b0"))()
+            loadstring(game:HttpGet("https://api.polsec.net/loader/55646c593e9f5876/69c53274fcb3f6b0"))()
 		end,
 	},
 	{
@@ -76,7 +76,7 @@ local Games = {
     			end
     		end
     		loadstring(game:HttpGet("https://raw.githubusercontent.com/Pixeluted/adoniscries/main/Source.lua", true))()
-    		loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/13cee231e61986e6e231deb973d21c4780d77fbd8e2848307e078ca132765baf.lua"))()
+    		loadstring(game:HttpGet("https://api.polsec.net/loader/55646c593e9f5876/7191705ceb5d4cc9"))()
 		end,
 	},
 	{
@@ -95,8 +95,8 @@ local Games = {
                 LocalPlayer:Kick("[solitude.club] Wrong loader folks.")
                 return
             end
-            loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/31965eab9ea8d7b04ec5f6483b2af5041ace1f98fa466aaff2674e26173d897a.lua"))()
-            return
+            loadstring(game:HttpGet("https://api.polsec.net/loader/55646c593e9f5876/3f5c0927aad40780"))()
+			return
 		end,
 	},
 	{
