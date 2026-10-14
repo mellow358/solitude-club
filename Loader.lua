@@ -83,7 +83,7 @@ local Games = {
 	},
 	{
 		Name = "prison life",
-		Description = "uses reformation.gg old loader",
+		Description = "released 2026/10/14 05:42",
 		Icon = "rbxassetid://109100556780679",
 		Load = function()
 			local allowed = false
