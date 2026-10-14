@@ -11,6 +11,7 @@ local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 local Player = Players.LocalPlayer
+local placeId = game.PlaceId
 
 local Accent = Color3.fromRGB(158, 188, 242)
 
