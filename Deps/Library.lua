@@ -3819,15 +3819,26 @@ function Library:CreateMobileButton(opts)
 		Corner(bar, 1)
 	end
 
-	local moved, origin, startPos, moveConn, endConn
+	local moved, origin, startPos, moveConn, endConn, activeTouchId
+
+	local function cleanupDrag()
+		if moveConn then moveConn:Disconnect() moveConn = nil end
+		if endConn then endConn:Disconnect() endConn = nil end
+		activeTouchId = nil
+	end
+
 	Track(button.InputBegan:Connect(function(input)
 		if input.UserInputType ~= Enum.UserInputType.MouseButton1
 			and input.UserInputType ~= Enum.UserInputType.Touch then return end
+		-- ignore a second finger if already dragging
+		if activeTouchId then return end
+		activeTouchId = input.UserInputType
 		moved = false
 		origin = input.Position
 		startPos = button.Position
 		Tween(button, { BackgroundColor3 = Theme.FieldHover }, EASE_FAST)
 		moveConn = UserInputService.InputChanged:Connect(function(move)
+			if not activeTouchId then return end
 			if move.UserInputType ~= Enum.UserInputType.MouseMovement
 				and move.UserInputType ~= Enum.UserInputType.Touch then return end
 			local delta = move.Position - origin
@@ -3837,11 +3848,13 @@ function Library:CreateMobileButton(opts)
 				startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end)
 		endConn = UserInputService.InputEnded:Connect(function(ended)
-			if ended.UserInputType ~= input.UserInputType then return end
-			if moveConn then moveConn:Disconnect() moveConn = nil end
-			if endConn then endConn:Disconnect() endConn = nil end
+			-- accept both Touch and MouseButton1 ended — Roblox can mismatch types on mobile
+			if ended.UserInputType ~= Enum.UserInputType.MouseButton1
+				and ended.UserInputType ~= Enum.UserInputType.Touch then return end
+			local didMove = moved
+			cleanupDrag()
 			Tween(button, { BackgroundColor3 = Theme.Section }, EASE_FAST)
-			if not moved then Library:ToggleUI() end
+			if not didMove then Library:ToggleUI() end
 		end)
 	end))
 
