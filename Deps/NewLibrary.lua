@@ -172,12 +172,12 @@ Library.Defaults = {}
 Library.NotificationsEnabled = true
 Library.NotificationLimit = 5
 Library.Dirty = false
-Library.BaseUrl = "https://raw.githubusercontent.com/FacilityHUB/UI-Facility/refs/heads/main/"
+Library.BaseUrl = "https://raw.githubusercontent.com/mellow358/solitude-club/refs/heads/main/"
 Library.AddonPaths = {
-	Icons = "addons/Icons.luau",
-	SaveManager = "addons/SaveManager.luau",
-	InterfaceManager = "addons/InterfaceManager.luau",
-	ThemeManager = "addons/ThemeManager.luau",
+	Icons = "Deps/Icons.lua",
+	SaveManager = "Deps/SaveManager.lua",
+	InterfaceManager = "Deps/InterfaceManager.lua",
+	ThemeManager = "Deps/NewThemeManager.lua",
 }
 Library.Addons = {}
 Library.Painted = Painted
