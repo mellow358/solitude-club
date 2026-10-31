@@ -196,7 +196,7 @@ function Library:SafeCallback(label, callback, ...)
 		local message = tostring(err)
 		local _, cut = string.find(message, ":%d+: ")
 		if cut then message = string.sub(message, cut + 1) end
-		warn("Facility | callback error in '" .. tostring(label) .. "': " .. tostring(err))
+		warn("solitude | callback error in '" .. tostring(label) .. "': " .. tostring(err))
 		self:Error("callback error", tostring(label) .. " - " .. message, 7)
 	end)
 end
@@ -223,7 +223,7 @@ function Library:LoadAddon(name)
 	if module == nil then
 		local path = self.AddonPaths[name]
 		if not path then
-			warn("Facility | unknown addon '" .. tostring(name) .. "'")
+			warn("solitude | unknown addon '" .. tostring(name) .. "'")
 			return nil
 		end
 		local fetched, source = pcall(function() return game:HttpGet(self.BaseUrl .. path) end)
@@ -237,7 +237,7 @@ function Library:LoadAddon(name)
 	end
 
 	if module == nil then
-		warn("Facility | addon '" .. tostring(name) .. "' unavailable")
+		warn("solitude | addon '" .. tostring(name) .. "' unavailable")
 		return nil
 	end
 	if type(module) == "function" then
@@ -271,7 +271,7 @@ end
 
 function Library:Repaint()
 	if PaintedCount == 0 then
-		warn("Facility | repaint registry is empty, main.luau is probably outdated")
+		warn("solitude | repaint registry is empty, main.luau is probably outdated")
 	end
 	IndexTheme()
 
@@ -313,7 +313,7 @@ end
 
 function Library:Register(flag, entry)
 	if self.Registry[flag] then
-		warn("Facility | duplicate flag '" .. tostring(flag) .. "', the previous element will no longer be saved")
+		warn("solitude | duplicate flag '" .. tostring(flag) .. "', the previous element will no longer be saved")
 	end
 	self.Registry[flag] = entry
 	self.Defaults[flag] = entry.Get()
@@ -3484,7 +3484,7 @@ function Window:Modal(opts)
 			if api.Blur then return end
 			pcall(function()
 				local blur = Instance.new("BlurEffect")
-				blur.Name = "FacilityModalBlur"
+				blur.Name = "solitudeModalBlur"
 				blur.Size = 0
 				blur.Parent = Lighting
 				api.Blur = blur
@@ -3660,7 +3660,7 @@ function Library:Window(opts)
 	-- load the saved theme before anything is drawn, so the key system,
 	-- the main window and every later element share the same palette
 	pcall(function()
-		local folder = opts.ThemeFolder or opts.Folder or "Facility"
+		local folder = opts.ThemeFolder or opts.Folder or "solitude"
 		local path = folder .. "/settings/theme.json"
 		if not (isfile and isfile(path)) then return end
 
@@ -3699,7 +3699,7 @@ function Library:Window(opts)
 
 		if remember then
 			pcall(function()
-				if isfile and isfile("facility_discord_" .. inv .. ".dat") then
+				if isfile and isfile("solitude_discord_" .. inv .. ".dat") then
 					joined = true
 				end
 			end)
@@ -3725,7 +3725,7 @@ function Library:Window(opts)
 				if remember then
 					pcall(function()
 						if writefile then
-							writefile("facility_discord_" .. inv .. ".dat", "1")
+							writefile("solitude_discord_" .. inv .. ".dat", "1")
 						end
 					end)
 				end
@@ -4109,7 +4109,7 @@ function Library:Window(opts)
 	local titleList = List(title, 0, Enum.FillDirection.Horizontal)
 	titleList.VerticalAlignment = Enum.VerticalAlignment.Center
 
-	local titleName = Label(title, opts.Title or "facility", Theme.TextBright, 14, Theme.FontMedium)
+	local titleName = Label(title, opts.Title or "solitude", Theme.TextBright, 14, Theme.FontMedium)
 	titleName.Size = UDim2.new(0, 0, 1, 0)
 	titleName.AutomaticSize = Enum.AutomaticSize.X
 
@@ -4967,7 +4967,7 @@ function Library:Watermark(opts)
 		Parent = root,
 	})
 	List(title, 0, Enum.FillDirection.Horizontal).VerticalAlignment = Enum.VerticalAlignment.Center
-	local titleName = Label(title, tostring(opts.Title or "facility"), Theme.TextBright, Theme.TextSize, Theme.FontMedium)
+	local titleName = Label(title, tostring(opts.Title or "solitude"), Theme.TextBright, Theme.TextSize, Theme.FontMedium)
 	titleName.Size = UDim2.fromScale(0, 1)
 	titleName.AutomaticSize = Enum.AutomaticSize.X
 	local titleSuffix = Label(title, tostring(opts.Suffix or ""), Theme.Accent, Theme.TextSize, Theme.FontMedium)
@@ -5791,7 +5791,7 @@ function Library:CreateCursor(opts)
 		end
 	end))
 
-	local bindName = "FacilityCursor_" .. RandomName(6)
+	local bindName = "solitudeCursor_" .. RandomName(6)
 	pcall(function()
 		RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value, follow)
 	end)
@@ -6384,7 +6384,7 @@ end
 Library.FileSystem = FileSystem
 
 if getgenv then
-	pcall(function() getgenv().Facility = Library end)
+	pcall(function() getgenv().solitude = Library end)
 end
 Library.SaveManager = Library:LoadAddon("SaveManager")
 Library.InterfaceManager = Library:LoadAddon("InterfaceManager")

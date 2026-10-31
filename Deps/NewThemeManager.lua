@@ -1,4 +1,4 @@
--- Facility addon | ThemeManager
+-- solitude addon | ThemeManager
 
 return function(Library)
 	local HttpService = game:GetService("HttpService")
@@ -6,10 +6,10 @@ return function(Library)
 
 	local ThemeManager = {}
 	ThemeManager.Library = Library
-	ThemeManager.Folder = "Facility"
+	ThemeManager.Folder = "solitude.club"
 	ThemeManager.Flags = { "theme_preset", "theme_accent" }
 	ThemeManager.AutoSave = false
-	ThemeManager.Current = "facility"
+	ThemeManager.Current = "solitude"
 
 	ThemeManager.Keys = {
 		{ "Accent", "accent" },
@@ -348,10 +348,10 @@ return function(Library)
 					Theme[key] = color
 					alphas[key] = 1
 				end
-				self.Current = "facility"
+				self.Current = "solitude"
 				self.Library:Repaint()
 				syncPickers()
-				if presetBox then presetBox:Set("facility", true) end
+				if presetBox then presetBox:Set("solitude", true) end
 				dirty = true
 			end,
 		})
