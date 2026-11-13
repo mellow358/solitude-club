@@ -20,22 +20,16 @@ local Client = Players.LocalPlayer
 local Camera = Workspace:FindFirstChildWhichIsA("Camera")
 local Viewport = Camera.ViewportSize
 --
---// Device Detection \\--
 local IsMobile = false
 do
-    local success, platform = pcall(function()
-        return UserInputService:GetPlatform()
+    pcall(function()
+        local Platform = UserInputService:GetPlatform()
+        IsMobile = (Platform == Enum.Platform.Android or Platform == Enum.Platform.IOS)
     end)
-    if success then
-        IsMobile = (platform == Enum.Platform.Android or platform == Enum.Platform.IOS)
-    else
+    if not IsMobile then
         IsMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
     end
 end
---
---// DPI Scale \\--
-local InitialDPIScale = math.clamp(Viewport.Y / 1080, 0.75, 1.25)
-local DPIScale = InitialDPIScale
 --
 do -- Library
     getgenv().Library = {
@@ -51,13 +45,9 @@ do -- Library
         UID = "1",
         UnsafeMode = false,
         InitTime = os.clock(),
-        DPIScales = {},
-        DPIScaleOffsets = {},
-        CurrentDPIScale = InitialDPIScale,
-        IsMobile = IsMobile,
         UI = {
             Name = "solitude.club",
-            CloseBind = Enum.KeyCode.Insert,
+            CloseBind = Enum.KeyCode.Delete,
             SectionResizeIncrements = 1,
             WatermarkRefreshRate = 1,
             MainUI = nil,
@@ -396,30 +386,7 @@ do -- Library
         Library.UI.Viewing = not Library.UI.Viewing
     end
     --
-    function Library:SetDPIScale(Scale)
-        assert(typeof(Scale) == "number", "SetDPIScale expects a number")
-        Scale = math.clamp(Scale, 0.25, 3)
-
-        Library.CurrentDPIScale = Scale
-        DPIScale = Scale
-
-        for UIScale in Library.DPIScales do
-            UIScale.Scale = Scale - (tonumber(Library.DPIScaleOffsets[UIScale]) or 0)
-        end
-
-        -- Refresh elements that support it
-        for _, Flag in Library.Flags do
-            if Flag.UpdateSize and typeof(Flag.UpdateSize) == "function" then
-                pcall(Flag.UpdateSize)
-            end
-        end
-    end
-    --
-    function Library:GetDPIScale()
-        return Library.CurrentDPIScale
-    end
-    --
-    function Library:GetTableLength(Table)
+    function Library:GetTableLength(Table)ble)
         local Length = 0
         --
         for Index, Value in pairs(Table) do
@@ -4923,7 +4890,7 @@ do -- Library
         Options = Library:Validate({
             Name = "solitude.club",
             Size = IsMobile and UDim2.new(0, 612, 0, 400) or UDim2.new(0, 700, 0, 612),
-            MinResize = IsMobile and UDim2.new(0, 500, 0, 400) or UDim2.new(0, 600, 0, 500),
+            MinResize = UDim2.new(0, 500, 0, 400),
             MaxResize = UDim2.new(0, 10000, 0, 10000),
             CloseBind = Enum.KeyCode.Insert,
         }, Options or {})
@@ -4957,14 +4924,6 @@ do -- Library
         --
         Outline:SetAttribute("g", Window.CurrentTab)
         Library.UI.MainUI = Outline
-
-        --// DPI Scale \\--
-        local MainUIScale = Library:CreateObject("UIScale", {
-            Scale = Library.CurrentDPIScale,
-            Parent = Outline
-        }, true)
-        table.insert(Library.DPIScales, MainUIScale)
-        Library.DPIScaleOffsets[MainUIScale] = 0
         --
         Outline.Position = UDim2.fromOffset((Viewport.X / 2) - (Outline.Size.X.Offset / 2), (Viewport.Y / 2) - (Outline.Size.Y.Offset / 2))
         Outline.Active = true
@@ -5164,91 +5123,164 @@ do -- Library
             Library:Resizable(Outline, ResizeButton, Options.MinResize, Options.MaxResize)
         end
         --
-        --// Mobile Toggle & Lock Buttons \\--
+        --// Mobile Buttons \\--
         if IsMobile then
-            local function CreateMobileButton(Text, Position, Order)
-                local BtnOutline = Library:CreateObject("Frame", {
-                    Name = "MobileBtn_" .. Text,
-                    AnchorPoint = Vector2.new(0, 0),
-                    Position = Position,
-                    Size = UDim2.new(0, 60, 0, 22),
-                    BorderSizePixel = 0,
-                    ZIndex = 10001,
-                    BackgroundColor3 = Color3.fromRGB(12, 12, 12),
-                    Parent = Library.UI.ScreenGUI
-                }, true)
+            local MobileButtons = Library:CreateObject("Frame", {
+                Name = "MobileButtons",
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(6, 6),
+                Size = UDim2.new(0, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.XY,
+                ZIndex = 10000,
+                Parent = MainUI,
+            })
 
-                local BtnInner = Library:CreateObject("Frame", {
-                    Name = "Inner",
-                    Position = UDim2.new(0, 1, 0, 1),
-                    Size = UDim2.new(1, -2, 1, -2),
-                    BorderSizePixel = 0,
-                    ZIndex = 10001,
-                    BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-                    Parent = BtnOutline
-                }, true)
+            local MobileButtonLayout = Library:CreateObject("UIListLayout", {
+                FillDirection = Enum.FillDirection.Horizontal,
+                Padding = UDim.new(0, 8),
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Parent = MobileButtons,
+            })
 
-                local BtnLabel = Library:CreateObject("TextLabel", {
-                    Name = "Text",
-                    Size = UDim2.new(1, 0, 1, 0),
-                    BackgroundTransparency = 1,
-                    ZIndex = 10002,
-                    FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+            -- Helper: measures text the same way Library:ClampString does
+            local function MeasureButtonSize(Text)
+                local Label = Library:CreateObject("TextLabel", {
+                    FontFace = Library.UI.NewFont,
+                    TextSize = Library.UI.FontSize,
+                    Text = Text,
                     RichText = true,
-                    Text = "<b>" .. Text .. "</b>",
-                    TextColor3 = Color3.fromRGB(208, 208, 208),
-                    TextSize = 14,
-                    TextXAlignment = Enum.TextXAlignment.Center,
-                    Parent = BtnOutline
-                }, true)
-
-                local BtnClick = Library:CreateObject("TextButton", {
-                    Name = "Button",
-                    Size = UDim2.new(1, 0, 1, 0),
-                    BackgroundTransparency = 1,
-                    Text = "",
-                    TextTransparency = 1,
-                    ZIndex = 10003,
-                    Parent = BtnOutline
-                }, true)
-
-                -- Register DPI scale for the button
-                local BtnScale = Library:CreateObject("UIScale", {
-                    Scale = Library.CurrentDPIScale,
-                    Parent = BtnOutline
-                }, true)
-                table.insert(Library.DPIScales, BtnScale)
-                Library.DPIScaleOffsets[BtnScale] = 0
-
-                Library:Connection(BtnOutline.MouseEnter, function()
-                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                    })
-                end)
-                Library:Connection(BtnOutline.MouseLeave, function()
-                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-                    })
-                end)
-
-                return BtnOutline, BtnLabel, BtnClick
+                    Visible = false,
+                    Size = UDim2.new(0, 0, 0, 0),
+                    Parent = Client.PlayerGui,
+                })
+                local Size = Label.TextBounds
+                Label:Destroy()
+                return UDim2.fromOffset(math.max(Size.X * 2, 60), math.max(Size.Y * 2, 22))
             end
 
-            local ToggleBtn, ToggleLabel, ToggleClick = CreateMobileButton("Toggle", UDim2.new(0, 5, 0, 5), 1)
-            local LockBtn, LockLabel, LockClick = CreateMobileButton("Lock", UDim2.new(0, 5, 0, 32), 2)
+            -- Creates a gamesense-styled button matching Library:Button's visuals
+            local function CreateMobileButton(Name, Text, LayoutOrder, Callback)
+                local BaseSize = MeasureButtonSize(Text)
 
-            Library.UI.MobileButtons = {ToggleBtn, LockBtn}
+                local ButtonOutline = Library:CreateObject("Frame", {
+                    Name = Name .. "Outline",
+                    BackgroundColor3 = Color3.fromRGB(12, 12, 12),
+                    BorderSizePixel = 0,
+                    Size = BaseSize,
+                    LayoutOrder = LayoutOrder,
+                    ZIndex = 10000,
+                    Parent = MobileButtons,
+                })
 
-            Library:Connection(ToggleClick.MouseButton1Click, function()
+                local ButtonInline = Library:CreateObject("Frame", {
+                    Name = Name .. "Inline",
+                    BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+                    BorderSizePixel = 0,
+                    Position = UDim2.new(0, 1, 0, 1),
+                    Size = UDim2.new(1, -2, 1, -2),
+                    ZIndex = 10000,
+                    Parent = ButtonOutline,
+                })
+
+                local ButtonMain = Library:CreateObject("Frame", {
+                    Name = Name .. "Main",
+                    BackgroundColor3 = Color3.fromRGB(220, 220, 220),
+                    BorderSizePixel = 0,
+                    Position = UDim2.new(0, 1, 0, 1),
+                    Size = UDim2.new(1, -2, 1, -2),
+                    ZIndex = 10000,
+                    Parent = ButtonInline,
+                })
+
+                Library:CreateObject("UIGradient", {
+                    Rotation = 90,
+                    Color = ColorSequence.new{
+                        ColorSequenceKeypoint.new(0, Color3.fromRGB(39, 39, 39)),
+                        ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 35))
+                    },
+                    Parent = ButtonMain,
+                })
+
+                local Button = Library:CreateObject("TextButton", {
+                    FontFace = Library.UI.NewFont,
+                    TextColor3 = Library.Theme.Default.TextColor,
+                    BorderSizePixel = 0,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 1, 0),
+                    Text = "<b>" .. Text .. "</b>",
+                    RichText = true,
+                    TextSize = Library.UI.FontSize,
+                    ZIndex = 10000,
+                    Parent = ButtonOutline,
+                })
+
+                Library:Connection(Button.MouseEnter, function()
+                    if Library.UI.Faded then return end
+                    Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
+                end)
+                Library:Connection(Button.MouseLeave, function()
+                    if Library.UI.Faded then return end
+                    Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(220, 220, 220)})
+                end)
+                Library:Connection(Button.MouseButton1Down, function()
+                    Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(180, 180, 180)})
+                end)
+                Library:Connection(UserInputService.InputEnded, function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                        Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(220, 220, 220)})
+                    end
+                end)
+                Library:Connection(Button.MouseButton1Click, Callback)
+
+                return {
+                    Outline = ButtonOutline,
+                    Main = ButtonMain,
+                    Text = Button,
+                    SetText = function(self, NewText)
+                        self.Text.Text = "<b>" .. NewText .. "</b>"
+                        self.Outline.Size = MeasureButtonSize(NewText)
+                    end,
+                }
+            end
+
+            --// Toggle Button \\--
+            local ToggleButton = CreateMobileButton("ToggleButton", "Toggle", 1, function()
                 Window.Visible = not Window.Visible
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
 
+            --// Lock Button \\--
             local Locked = false
-            Library:Connection(LockClick.MouseButton1Click, function()
+            local LockButton = CreateMobileButton("LockButton", "Lock", 2, function()
                 Locked = not Locked
                 Outline.Draggable = not Locked
-                LockLabel.Text = Locked and "<b>Unlock</b>" or "<b>Lock</b>"
+                Outline.Active = not Locked
+                LockButton:SetText(Locked and "Unlock" or "Lock")
+            end)
+
+            --// Drag support for the button holder \\--
+            local Dragging = false
+            local DragStart, StartPos
+            Library:Connection(MobileButtons.InputBegan, function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                    Dragging = true
+                    DragStart = Input.Position
+                    StartPos = MobileButtons.Position
+                end
+            end)
+            Library:Connection(UserInputService.InputChanged, function(Input)
+                if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
+                    local Delta = Input.Position - DragStart
+                    MobileButtons.Position = UDim2.new(
+                        StartPos.X.Scale, StartPos.X.Offset + Delta.X,
+                        StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y
+                    )
+                end
+            end)
+            Library:Connection(UserInputService.InputEnded, function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                    Dragging = false
+                end
             end)
         end
         --
@@ -7345,13 +7377,6 @@ do -- Library
             --
             Library:Connection(Camera:GetPropertyChangedSignal("ViewportSize"), function()
                 Viewport = Camera.ViewportSize
-
-                --// Recompute DPI scale \\--
-                local NewScale = math.clamp(Viewport.Y / 1080, 0.75, 1.25)
-                if math.abs(NewScale - Library.CurrentDPIScale) > 0.01 then
-                    Library:SetDPIScale(NewScale)
-                end
-
                 --
                 Outline.Position = UDim2.fromOffset((Viewport.X / 2) - (Outline.Size.X.Offset / 2), (Viewport.Y / 2) - (Outline.Size.Y.Offset / 2))
             end)
@@ -7364,19 +7389,9 @@ do -- Library
                 Value:Disconnect()
             end
             --
-            --// Clean up mobile buttons \\--
-            for _, Obj in Library.UI.ScreenGUI:GetChildren() do
-                if Obj.Name:match("^MobileBtn_") then
-                    Obj:Destroy()
-                end
-            end
-            --
             for _, Objects in Library.Objects do
                 Objects[1]:Destroy()
             end
-            --
-            table.clear(Library.DPIScales)
-            table.clear(Library.DPIScaleOffsets)
             --
             MainUI:Destroy()
         end
