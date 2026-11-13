@@ -5125,73 +5125,109 @@ do -- Library
         --
         --// Mobile Buttons \\--
         if IsMobile then
-            local MobileButtons = Library:CreateObject("Frame", {
-                Name = "MobileButtons",
+            local MobileGui = Library:CreateObject("ScreenGui", {
+                ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
+                DisplayOrder = 1001,
+                ResetOnSpawn = false,
+                IgnoreGuiInset = true,
+                Name = "\0",
+                Parent = gethui()
+            }, true)
+        
+            local Floats = Library:CreateObject("Frame", {
                 BackgroundTransparency = 1,
-                Position = UDim2.fromOffset(6, 6),
-                Size = UDim2.new(0, 0, 0, 0),
-                AutomaticSize = Enum.AutomaticSize.XY,
-                ZIndex = 10000,
-                Parent = MainUI,
-            })
-
-            local MobileButtonLayout = Library:CreateObject("UIListLayout", {
-                FillDirection = Enum.FillDirection.Horizontal,
-                Padding = UDim.new(0, 8),
-                SortOrder = Enum.SortOrder.LayoutOrder,
-                Parent = MobileButtons,
-            })
-
-            -- Helper: measures text the same way Library:ClampString does
-            local function MeasureButtonSize(Text)
+                Size = UDim2.fromScale(1, 1),
+                ZIndex = 10,
+                Active = false,
+                Parent = MobileGui,
+            }, true)
+        
+            local function MeasureText(Text, TextSize)
                 local Label = Library:CreateObject("TextLabel", {
                     FontFace = Library.UI.NewFont,
-                    TextSize = Library.UI.FontSize,
+                    TextSize = TextSize,
                     Text = Text,
                     RichText = true,
                     Visible = false,
                     Size = UDim2.new(0, 0, 0, 0),
                     Parent = Client.PlayerGui,
-                })
+                }, true)
                 local Size = Label.TextBounds
                 Label:Destroy()
-                return UDim2.fromOffset(math.max(Size.X * 2, 60), math.max(Size.Y * 2, 22))
+                return Size
             end
-
-            -- Creates a gamesense-styled button matching Library:Button's visuals
-            local function CreateMobileButton(Name, Text, LayoutOrder, Callback)
-                local BaseSize = MeasureButtonSize(Text)
-
+        
+            local function MakeDraggable(UI, DragFrame)
+                local StartPos, FramePos, Dragging, Changed
+                Library:Connection(DragFrame.InputBegan, function(Input)
+                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
+                        and Input.UserInputType ~= Enum.UserInputType.Touch then return end
+                    StartPos = Input.Position
+                    FramePos = UI.Position
+                    Dragging = true
+                    Changed = Input.Changed:Connect(function()
+                        if Input.UserInputState ~= Enum.UserInputState.End then return end
+                        Dragging = false
+                        if Changed and Changed.Connected then Changed:Disconnect() Changed = nil end
+                    end)
+                end)
+                Library:Connection(UserInputService.InputChanged, function(Input)
+                    if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement
+                        or Input.UserInputType == Enum.UserInputType.Touch) then
+                        local Delta = Input.Position - StartPos
+                        UI.Position = UDim2.new(
+                            FramePos.X.Scale, FramePos.X.Offset + Delta.X,
+                            FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y)
+                    end
+                end)
+            end
+        
+            -- Gamesense-styled draggable button (matches Library:Button's layered visuals)
+            local function AddDraggableButton(Text, Callback)
+                -- Root: draggable + sizing, mirrors Library.lua's AddDraggableButton
+                local Root = Library:CreateObject("TextButton", {
+                    BackgroundTransparency = 1,
+                    Position = UDim2.fromOffset(6, 6),
+                    Text = "",
+                    AutoButtonColor = false,
+                    ZIndex = 1,
+                    Parent = Floats,
+                }, true)
+        
+                -- Layered gamesense structure (identical to Library:Button)
                 local ButtonOutline = Library:CreateObject("Frame", {
-                    Name = Name .. "Outline",
+                    BorderColor3 = Color3.fromRGB(0, 0, 0),
+                    Name = "ButtonOutline",
+                    Position = UDim2.new(0, 0, 0, 0),
+                    Size = UDim2.new(1, 0, 1, 0),
+                    ZIndex = 3,
+                    BorderSizePixel = 0,
                     BackgroundColor3 = Color3.fromRGB(12, 12, 12),
-                    BorderSizePixel = 0,
-                    Size = BaseSize,
-                    LayoutOrder = LayoutOrder,
-                    ZIndex = 10000,
-                    Parent = MobileButtons,
-                })
-
+                    Parent = Root,
+                }, true)
+        
                 local ButtonInline = Library:CreateObject("Frame", {
-                    Name = Name .. "Inline",
+                    Size = UDim2.new(1, -2, 1, -2),
+                    Name = "ButtonInline",
+                    Position = UDim2.new(0, 1, 0, 1),
+                    BorderColor3 = Color3.fromRGB(0, 0, 0),
+                    ZIndex = 3,
+                    BorderSizePixel = 0,
                     BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-                    BorderSizePixel = 0,
-                    Position = UDim2.new(0, 1, 0, 1),
-                    Size = UDim2.new(1, -2, 1, -2),
-                    ZIndex = 10000,
                     Parent = ButtonOutline,
-                })
-
+                }, true)
+        
                 local ButtonMain = Library:CreateObject("Frame", {
-                    Name = Name .. "Main",
-                    BackgroundColor3 = Color3.fromRGB(220, 220, 220),
-                    BorderSizePixel = 0,
-                    Position = UDim2.new(0, 1, 0, 1),
                     Size = UDim2.new(1, -2, 1, -2),
-                    ZIndex = 10000,
+                    Name = "ButtonMain_1",
+                    Position = UDim2.new(0, 1, 0, 1),
+                    BorderColor3 = Color3.fromRGB(0, 0, 0),
+                    ZIndex = 3,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = Color3.fromRGB(220, 220, 220),
                     Parent = ButtonInline,
-                })
-
+                }, true)
+        
                 Library:CreateObject("UIGradient", {
                     Rotation = 90,
                     Color = ColorSequence.new{
@@ -5199,30 +5235,41 @@ do -- Library
                         ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 35))
                     },
                     Parent = ButtonMain,
-                })
-
-                local Button = Library:CreateObject("TextButton", {
+                }, true)
+        
+                local Label = Library:CreateObject("TextLabel", {
                     FontFace = Library.UI.NewFont,
                     TextColor3 = Library.Theme.Default.TextColor,
-                    BorderSizePixel = 0,
-                    BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 1, 0),
-                    Text = "<b>" .. Text .. "</b>",
+                    BorderColor3 = Color3.fromRGB(0, 0, 0),
+                    Name = "Label",
                     RichText = true,
+                    Text = "<b>" .. Text .. "</b>",
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    Size = UDim2.new(1, 0, 1, 0),
+                    ZIndex = 3,
                     TextSize = Library.UI.FontSize,
-                    ZIndex = 10000,
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                     Parent = ButtonOutline,
-                })
-
-                Library:Connection(Button.MouseEnter, function()
-                    if Library.UI.Faded then return end
+                }, true)
+        
+                -- Size = TextBounds * 2 (Library.lua sizing)
+                local function Resize()
+                    local X, Y = MeasureText(Text, Library.UI.FontSize)
+                    local W = math.max(X * 2, 60)
+                    local H = math.max(Y * 2, 22)
+                    Root.Size = UDim2.fromOffset(W, H)
+                end
+                Resize()
+        
+                -- Gamesense hover/press behavior (same as Library:Button)
+                Library:Connection(Root.MouseEnter, function()
                     Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
                 end)
-                Library:Connection(Button.MouseLeave, function()
-                    if Library.UI.Faded then return end
+                Library:Connection(Root.MouseLeave, function()
                     Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(220, 220, 220)})
                 end)
-                Library:Connection(Button.MouseButton1Down, function()
+                Library:Connection(Root.MouseButton1Down, function()
                     Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(180, 180, 180)})
                 end)
                 Library:Connection(UserInputService.InputEnded, function(Input)
@@ -5230,58 +5277,47 @@ do -- Library
                         Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(220, 220, 220)})
                     end
                 end)
-                Library:Connection(Button.MouseButton1Click, Callback)
-
+        
+                -- Click + drag threshold (Library.lua behavior)
+                local PressPosition
+                Library:Connection(Root.InputBegan, function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1
+                        or Input.UserInputType == Enum.UserInputType.Touch then
+                        PressPosition = Root.AbsolutePosition
+                    end
+                end)
+                Library:Connection(Root.Activated, function()
+                    if PressPosition and (Root.AbsolutePosition - PressPosition).Magnitude > 10 then return end
+                    Callback()
+                end)
+        
+                MakeDraggable(Root, Root)
+        
                 return {
-                    Outline = ButtonOutline,
-                    Main = ButtonMain,
-                    Text = Button,
+                    Button = Root,
                     SetText = function(self, NewText)
-                        self.Text.Text = "<b>" .. NewText .. "</b>"
-                        self.Outline.Size = MeasureButtonSize(NewText)
+                        Text = NewText
+                        Label.Text = "<b>" .. NewText .. "</b>"
+                        Resize()
                     end,
                 }
             end
-
-            --// Toggle Button \\--
-            local ToggleButton = CreateMobileButton("ToggleButton", "Toggle", 1, function()
+        
+            local ToggleButton = AddDraggableButton("Toggle", function()
                 Window.Visible = not Window.Visible
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
-
-            --// Lock Button \\--
-            local Locked = false
-            local LockButton = CreateMobileButton("LockButton", "Lock", 2, function()
-                Locked = not Locked
-                Outline.Draggable = not Locked
-                Outline.Active = not Locked
-                LockButton:SetText(Locked and "Unlock" or "Lock")
+        
+            local LockButton = AddDraggableButton("Lock", function()
+                Library.CantDragForced = not Library.CantDragForced
+                LockButton:SetText(Library.CantDragForced and "Unlock" or "Lock")
             end)
-
-            --// Drag support for the button holder \\--
-            local Dragging = false
-            local DragStart, StartPos
-            Library:Connection(MobileButtons.InputBegan, function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                    Dragging = true
-                    DragStart = Input.Position
-                    StartPos = MobileButtons.Position
-                end
-            end)
-            Library:Connection(UserInputService.InputChanged, function(Input)
-                if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
-                    local Delta = Input.Position - DragStart
-                    MobileButtons.Position = UDim2.new(
-                        StartPos.X.Scale, StartPos.X.Offset + Delta.X,
-                        StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y
-                    )
-                end
-            end)
-            Library:Connection(UserInputService.InputEnded, function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                    Dragging = false
-                end
-            end)
+        
+            -- Positions (Library.lua layout)
+            ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
+            ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
+            LockButton.Button.AnchorPoint = Vector2.new(0, 0)
+            LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
         end
         --
         function Window:CreateTab(Options)
