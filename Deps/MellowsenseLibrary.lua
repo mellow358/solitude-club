@@ -7407,3 +7407,5 @@ do -- Library
         return setmetatable(Window, Library)
     end
 end
+
+return Library
