@@ -5125,7 +5125,8 @@ do -- Library
         --
         --// Mobile Buttons \\--
         if IsMobile then
-            -- Separate ScreenGui so Library:Fade() / Library.Objects never touch them
+            -- Use the library's own Floats layer so buttons get the gamesense theme,
+            -- correct scaling (UIScale via Library.Scales), outlines, and drag support.
             local MobileGui = Library:CreateObject("ScreenGui", {
                 ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
                 DisplayOrder = 1001,
@@ -5135,7 +5136,6 @@ do -- Library
                 Parent = gethui()
             }, true)
         
-            -- Mirror Obsidian's "Floats" layer: a fullscreen transparent frame
             local Floats = Library:CreateObject("Frame", {
                 BackgroundTransparency = 1,
                 Size = UDim2.fromScale(1, 1),
@@ -5144,7 +5144,7 @@ do -- Library
                 Parent = MobileGui,
             }, true)
         
-            -- Same as Obsidian's GetTextBounds usage in AddDraggableButton
+            -- Measure text using the library's font/size, returning two numbers (fixes the mul error)
             local function MeasureText(Text, TextSize)
                 local Label = Library:CreateObject("TextLabel", {
                     FontFace = Library.UI.NewFont,
@@ -5155,16 +5155,16 @@ do -- Library
                     Size = UDim2.new(0, 0, 0, 0),
                     Parent = Client.PlayerGui,
                 }, true)
-                local Size = Label.TextBounds
+                local Bounds = Label.TextBounds
                 Label:Destroy()
-                return Size
+                return Bounds.X, Bounds.Y
             end
         
-            -- Replicates Obsidian's MakeDraggable (same math, same input handling)
+            -- Drag support matching Library.lua's MakeDraggable
             local function MakeDraggable(UI, DragFrame)
-                local StartPos, FramePos, Dragging, Changed, InputBegan, InputChanged
+                local StartPos, FramePos, Dragging, Changed
         
-                InputBegan = Library:Connection(DragFrame.InputBegan, function(Input)
+                Library:Connection(DragFrame.InputBegan, function(Input)
                     if Input.UserInputType ~= Enum.UserInputType.MouseButton1
                         and Input.UserInputType ~= Enum.UserInputType.Touch then
                         return
@@ -5183,7 +5183,7 @@ do -- Library
                     end)
                 end)
         
-                InputChanged = Library:Connection(UserInputService.InputChanged, function(Input)
+                Library:Connection(UserInputService.InputChanged, function(Input)
                     if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement
                         or Input.UserInputType == Enum.UserInputType.Touch) then
                         local Delta = Input.Position - StartPos
@@ -5195,46 +5195,52 @@ do -- Library
                 end)
             end
         
-            -- Replicates Obsidian's AddDraggableButton visuals (BackgroundColor, outline, corner, text sizing)
+            -- Build a button using the library's theme colors/outline/corner + proper scaling
             local function AddDraggableButton(Text, Callback)
                 local Btn = Library:CreateObject("TextButton", {
-                    BackgroundColor3 = Color3.fromRGB(15, 15, 15), -- Library.Scheme.BackgroundColor
+                    BackgroundColor3 = Color3.fromRGB(25, 25, 25), -- MainColor
                     Position = UDim2.fromOffset(6, 6),
                     TextSize = 16,
                     Text = Text,
                     FontFace = Library.UI.NewFont,
-                    TextColor3 = Color3.new(1, 1, 1),
+                    TextColor3 = Color3.fromRGB(255, 255, 255), -- FontColor
                     ZIndex = 1,
                     AutoButtonColor = false,
                     Parent = Floats,
                 }, true)
         
+                -- Corner radius
                 Library:CreateObject("UICorner", {
                     CornerRadius = UDim.new(0, 4),
                     Parent = Btn,
                 }, true)
         
-                -- Outline (matches Obsidian:AddOutline)
+                -- Outline + shadow (matches Library:AddOutline)
                 Library:CreateObject("UIStroke", {
-                    Color = Color3.fromRGB(40, 40, 40), -- Library.Scheme.OutlineColor
+                    Color = Color3.fromRGB(40, 40, 40), -- OutlineColor
                     Thickness = 1,
                     ZIndex = 2,
                     Parent = Btn,
                 }, true)
                 Library:CreateObject("UIStroke", {
-                    Color = Color3.new(0, 0, 0),
+                    Color = Color3.fromRGB(0, 0, 0), -- DarkColor
                     Thickness = 1.5,
                     ZIndex = 1,
                     Parent = Btn,
                 }, true)
         
-                -- Size from TextBounds * 2 (same as Library.lua)
+                -- Scale with the rest of the UI (Library.lua does this via Library.Scales)
+                table.insert(Library.Scales, Library:CreateObject("UIScale", {
+                    Parent = Btn,
+                }, true))
+        
+                -- Size from text bounds (returns two numbers — no more mul error)
                 local X, Y = MeasureText(Text, 16)
                 Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
         
-                -- Drag support
                 MakeDraggable(Btn, Btn)
         
+                -- Click detection with drag threshold
                 local PressPosition
                 Library:Connection(Btn.InputBegan, function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1
@@ -5262,7 +5268,6 @@ do -- Library
             --// Toggle Button \\--
             local ToggleButton = AddDraggableButton("Toggle", function()
                 Window.Visible = not Window.Visible
-                -- Fade only the main UI, never the mobile buttons
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
         
@@ -5272,28 +5277,12 @@ do -- Library
                 LockButton:SetText(Library.CantDragForced and "Unlock" or "Lock")
             end)
         
-            --// Positions (same as Library.lua's MobileButtonsSide branch) \\--
-            -- Default to "Left" since Mellowsense doesn't expose MobileButtonsSide
-            local MobileButtonsSide = "Left"
+            --// Position matching Library.lua (MobileButtonsSide = "Left") \\--
+            ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
+            ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
         
-            if MobileButtonsSide == "Right" then
-                ToggleButton.Button.AnchorPoint = Vector2.new(1, 0)
-                ToggleButton.Button.Position = UDim2.new(1, -6, 0, 6)
-        
-                LockButton.Button.AnchorPoint = Vector2.new(1, 0)
-                LockButton.Button.Position = UDim2.new(1, -(ToggleButton.Button.Size.X.Offset + 12), 0, 6)
-            else
-                ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
-                ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
-        
-                LockButton.Button.AnchorPoint = Vector2.new(0, 0)
-                LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
-            end
-        
-            -- Make sure these buttons never get destroyed by Library:Unload's object sweep
-            -- (they're on their own ScreenGui, so Unload's MainUI:Destroy won't touch them,
-            --  but MobileGui itself must be destroyed on unload)
-            Library:Connection(MobileGui.Destroying, function() end) -- no-op keep-alive
+            LockButton.Button.AnchorPoint = Vector2.new(0, 0)
+            LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
         end
         --
         function Window:CreateTab(Options)
