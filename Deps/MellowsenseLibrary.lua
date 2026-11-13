@@ -5125,6 +5125,7 @@ do -- Library
         --
         --// Mobile Buttons \\--
         if IsMobile then
+            -- Separate ScreenGui so Library:Fade() / Library.Objects never touch them
             local MobileGui = Library:CreateObject("ScreenGui", {
                 ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
                 DisplayOrder = 1001,
@@ -5134,6 +5135,7 @@ do -- Library
                 Parent = gethui()
             }, true)
         
+            -- Mirror Obsidian's "Floats" layer: a fullscreen transparent frame
             local Floats = Library:CreateObject("Frame", {
                 BackgroundTransparency = 1,
                 Size = UDim2.fromScale(1, 1),
@@ -5142,6 +5144,7 @@ do -- Library
                 Parent = MobileGui,
             }, true)
         
+            -- Same as Obsidian's GetTextBounds usage in AddDraggableButton
             local function MeasureText(Text, TextSize)
                 local Label = Library:CreateObject("TextLabel", {
                     FontFace = Library.UI.NewFont,
@@ -5157,167 +5160,140 @@ do -- Library
                 return Size
             end
         
+            -- Replicates Obsidian's MakeDraggable (same math, same input handling)
             local function MakeDraggable(UI, DragFrame)
-                local StartPos, FramePos, Dragging, Changed
-                Library:Connection(DragFrame.InputBegan, function(Input)
+                local StartPos, FramePos, Dragging, Changed, InputBegan, InputChanged
+        
+                InputBegan = Library:Connection(DragFrame.InputBegan, function(Input)
                     if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                        and Input.UserInputType ~= Enum.UserInputType.Touch then return end
+                        and Input.UserInputType ~= Enum.UserInputType.Touch then
+                        return
+                    end
                     StartPos = Input.Position
                     FramePos = UI.Position
                     Dragging = true
+        
                     Changed = Input.Changed:Connect(function()
                         if Input.UserInputState ~= Enum.UserInputState.End then return end
                         Dragging = false
-                        if Changed and Changed.Connected then Changed:Disconnect() Changed = nil end
+                        if Changed and Changed.Connected then
+                            Changed:Disconnect()
+                            Changed = nil
+                        end
                     end)
                 end)
-                Library:Connection(UserInputService.InputChanged, function(Input)
+        
+                InputChanged = Library:Connection(UserInputService.InputChanged, function(Input)
                     if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement
                         or Input.UserInputType == Enum.UserInputType.Touch) then
                         local Delta = Input.Position - StartPos
                         UI.Position = UDim2.new(
                             FramePos.X.Scale, FramePos.X.Offset + Delta.X,
-                            FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y)
+                            FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y
+                        )
                     end
                 end)
             end
         
-            -- Gamesense-styled draggable button (matches Library:Button's layered visuals)
+            -- Replicates Obsidian's AddDraggableButton visuals (BackgroundColor, outline, corner, text sizing)
             local function AddDraggableButton(Text, Callback)
-                -- Root: draggable + sizing, mirrors Library.lua's AddDraggableButton
-                local Root = Library:CreateObject("TextButton", {
-                    BackgroundTransparency = 1,
+                local Btn = Library:CreateObject("TextButton", {
+                    BackgroundColor3 = Color3.fromRGB(15, 15, 15), -- Library.Scheme.BackgroundColor
                     Position = UDim2.fromOffset(6, 6),
-                    Text = "",
-                    AutoButtonColor = false,
+                    TextSize = 16,
+                    Text = Text,
+                    FontFace = Library.UI.NewFont,
+                    TextColor3 = Color3.new(1, 1, 1),
                     ZIndex = 1,
+                    AutoButtonColor = false,
                     Parent = Floats,
                 }, true)
         
-                -- Layered gamesense structure (identical to Library:Button)
-                local ButtonOutline = Library:CreateObject("Frame", {
-                    BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    Name = "ButtonOutline",
-                    Position = UDim2.new(0, 0, 0, 0),
-                    Size = UDim2.new(1, 0, 1, 0),
-                    ZIndex = 3,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = Color3.fromRGB(12, 12, 12),
-                    Parent = Root,
+                Library:CreateObject("UICorner", {
+                    CornerRadius = UDim.new(0, 4),
+                    Parent = Btn,
                 }, true)
         
-                local ButtonInline = Library:CreateObject("Frame", {
-                    Size = UDim2.new(1, -2, 1, -2),
-                    Name = "ButtonInline",
-                    Position = UDim2.new(0, 1, 0, 1),
-                    BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    ZIndex = 3,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-                    Parent = ButtonOutline,
+                -- Outline (matches Obsidian:AddOutline)
+                Library:CreateObject("UIStroke", {
+                    Color = Color3.fromRGB(40, 40, 40), -- Library.Scheme.OutlineColor
+                    Thickness = 1,
+                    ZIndex = 2,
+                    Parent = Btn,
+                }, true)
+                Library:CreateObject("UIStroke", {
+                    Color = Color3.new(0, 0, 0),
+                    Thickness = 1.5,
+                    ZIndex = 1,
+                    Parent = Btn,
                 }, true)
         
-                local ButtonMain = Library:CreateObject("Frame", {
-                    Size = UDim2.new(1, -2, 1, -2),
-                    Name = "ButtonMain_1",
-                    Position = UDim2.new(0, 1, 0, 1),
-                    BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    ZIndex = 3,
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = Color3.fromRGB(220, 220, 220),
-                    Parent = ButtonInline,
-                }, true)
+                -- Size from TextBounds * 2 (same as Library.lua)
+                local X, Y = MeasureText(Text, 16)
+                Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
         
-                Library:CreateObject("UIGradient", {
-                    Rotation = 90,
-                    Color = ColorSequence.new{
-                        ColorSequenceKeypoint.new(0, Color3.fromRGB(39, 39, 39)),
-                        ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 35))
-                    },
-                    Parent = ButtonMain,
-                }, true)
+                -- Drag support
+                MakeDraggable(Btn, Btn)
         
-                local Label = Library:CreateObject("TextLabel", {
-                    FontFace = Library.UI.NewFont,
-                    TextColor3 = Library.Theme.Default.TextColor,
-                    BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    Name = "Label",
-                    RichText = true,
-                    Text = "<b>" .. Text .. "</b>",
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    Size = UDim2.new(1, 0, 1, 0),
-                    ZIndex = 3,
-                    TextSize = Library.UI.FontSize,
-                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                    Parent = ButtonOutline,
-                }, true)
-        
-                -- Size = TextBounds * 2 (Library.lua sizing)
-                local function Resize()
-                    local X, Y = MeasureText(Text, Library.UI.FontSize)
-                    local W = math.max(X * 2, 60)
-                    local H = math.max(Y * 2, 22)
-                    Root.Size = UDim2.fromOffset(W, H)
-                end
-                Resize()
-        
-                -- Gamesense hover/press behavior (same as Library:Button)
-                Library:Connection(Root.MouseEnter, function()
-                    Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
-                end)
-                Library:Connection(Root.MouseLeave, function()
-                    Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(220, 220, 220)})
-                end)
-                Library:Connection(Root.MouseButton1Down, function()
-                    Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(180, 180, 180)})
-                end)
-                Library:Connection(UserInputService.InputEnded, function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                        Library:TweenObject(ButtonMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(220, 220, 220)})
-                    end
-                end)
-        
-                -- Click + drag threshold (Library.lua behavior)
                 local PressPosition
-                Library:Connection(Root.InputBegan, function(Input)
+                Library:Connection(Btn.InputBegan, function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1
                         or Input.UserInputType == Enum.UserInputType.Touch then
-                        PressPosition = Root.AbsolutePosition
+                        PressPosition = Btn.AbsolutePosition
                     end
                 end)
-                Library:Connection(Root.Activated, function()
-                    if PressPosition and (Root.AbsolutePosition - PressPosition).Magnitude > 10 then return end
+                Library:Connection(Btn.Activated, function()
+                    if PressPosition and (Btn.AbsolutePosition - PressPosition).Magnitude > 10 then
+                        return
+                    end
                     Callback()
                 end)
         
-                MakeDraggable(Root, Root)
-        
                 return {
-                    Button = Root,
+                    Button = Btn,
                     SetText = function(self, NewText)
-                        Text = NewText
-                        Label.Text = "<b>" .. NewText .. "</b>"
-                        Resize()
+                        local X2, Y2 = MeasureText(NewText, 16)
+                        Btn.Text = NewText
+                        Btn.Size = UDim2.fromOffset(X2 * 2, Y2 * 2)
                     end,
                 }
             end
         
+            --// Toggle Button \\--
             local ToggleButton = AddDraggableButton("Toggle", function()
                 Window.Visible = not Window.Visible
+                -- Fade only the main UI, never the mobile buttons
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
         
+            --// Lock Button \\--
             local LockButton = AddDraggableButton("Lock", function()
                 Library.CantDragForced = not Library.CantDragForced
                 LockButton:SetText(Library.CantDragForced and "Unlock" or "Lock")
             end)
         
-            -- Positions (Library.lua layout)
-            ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
-            ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
-            LockButton.Button.AnchorPoint = Vector2.new(0, 0)
-            LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
+            --// Positions (same as Library.lua's MobileButtonsSide branch) \\--
+            -- Default to "Left" since Mellowsense doesn't expose MobileButtonsSide
+            local MobileButtonsSide = "Left"
+        
+            if MobileButtonsSide == "Right" then
+                ToggleButton.Button.AnchorPoint = Vector2.new(1, 0)
+                ToggleButton.Button.Position = UDim2.new(1, -6, 0, 6)
+        
+                LockButton.Button.AnchorPoint = Vector2.new(1, 0)
+                LockButton.Button.Position = UDim2.new(1, -(ToggleButton.Button.Size.X.Offset + 12), 0, 6)
+            else
+                ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
+                ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
+        
+                LockButton.Button.AnchorPoint = Vector2.new(0, 0)
+                LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
+            end
+        
+            -- Make sure these buttons never get destroyed by Library:Unload's object sweep
+            -- (they're on their own ScreenGui, so Unload's MainUI:Destroy won't touch them,
+            --  but MobileGui itself must be destroyed on unload)
+            Library:Connection(MobileGui.Destroying, function() end) -- no-op keep-alive
         end
         --
         function Window:CreateTab(Options)
