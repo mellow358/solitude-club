@@ -128,7 +128,7 @@ do -- Library
             Objects = {},
             Default = {
                 Accent = Color3.fromRGB(158, 188, 242),
-                SecondAccent = Color3.fromRGB(124, 158, 32),
+                SecondAccent = Color3.fromRGB(158, 188, 242),
                 TextColor = Color3.fromRGB(205, 205, 205),
                 Risky = Color3.fromRGB(165, 165, 120),
             }
