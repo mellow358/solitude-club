@@ -386,7 +386,7 @@ do -- Library
         Library.UI.Viewing = not Library.UI.Viewing
     end
     --
-    function Library:GetTableLength(Table)ble)
+    function Library:GetTableLength(Table)
         local Length = 0
         --
         for Index, Value in pairs(Table) do
@@ -7407,5 +7407,3 @@ do -- Library
         return setmetatable(Window, Library)
     end
 end
-
-return Library
