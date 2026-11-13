@@ -5125,6 +5125,8 @@ do -- Library
         --
         --// Mobile Buttons \\--
         if IsMobile then
+            local TextService = game:GetService("TextService")
+        
             local MobileGui = Library:CreateObject("ScreenGui", {
                 ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
                 DisplayOrder = 1001,
@@ -5142,20 +5144,22 @@ do -- Library
                 Parent = MobileGui,
             }, true)
         
-            -- Return two numbers so `X * 2, Y * 2` doesn't blow up
-            local function MeasureText(Text, TextSize)
-                local Label = Library:CreateObject("TextLabel", {
-                    FontFace = Library.UI.NewFont,
-                    TextSize = TextSize,
-                    Text = Text,
-                    RichText = true,
-                    Visible = false,
-                    Size = UDim2.new(0, 0, 0, 0),
-                    Parent = Client.PlayerGui,
-                }, true)
-                local Bounds = Label.TextBounds
-                Label:Destroy()
-                return Bounds.X, Bounds.Y
+            -- Accurate measurement, mirrors Library.lua's GetTextBounds. Returns two numbers.
+            local function GetTextBounds(Text, TextSize)
+                local Params = Instance.new("GetTextBoundsParams")
+                Params.Text = tostring(Text)
+                Params.RichText = false
+                Params.Font = Library.UI.NewFont
+                Params.Size = TextSize
+                Params.Width = 10000
+                local Success, Bounds = pcall(function()
+                    return TextService:GetTextBoundsAsync(Params)
+                end)
+                if Success and Bounds then
+                    return math.ceil(Bounds.X), math.ceil(Bounds.Y)
+                end
+                -- Fallback if GetTextBoundsAsync is unavailable
+                return math.ceil(#tostring(Text) * TextSize * 0.55), math.ceil(TextSize * 1.25)
             end
         
             local function MakeDraggable(UI, DragFrame)
@@ -5194,12 +5198,12 @@ do -- Library
         
             local function AddDraggableButton(Text, Callback)
                 local Btn = Library:CreateObject("TextButton", {
-                    BackgroundColor3 = Color3.fromRGB(35, 35, 35),   -- MultiBox/Dropdown body
+                    BackgroundColor3 = Color3.fromRGB(35, 35, 35),
                     Position = UDim2.fromOffset(6, 6),
                     TextSize = 16,
                     Text = Text,
                     FontFace = Library.UI.NewFont,
-                    TextColor3 = Library.Theme.Default.TextColor,   -- 205,205,205
+                    TextColor3 = Library.Theme.Default.TextColor,
                     ZIndex = 1,
                     AutoButtonColor = false,
                     Parent = Floats,
@@ -5210,7 +5214,6 @@ do -- Library
                     Parent = Btn,
                 }, true)
         
-                -- Border: 12,12,12 frame + 40,40,40 inner outline, matching Window()
                 Library:CreateObject("UIStroke", {
                     Color = Color3.fromRGB(40, 40, 40),
                     Thickness = 1,
@@ -5224,11 +5227,26 @@ do -- Library
                     Parent = Btn,
                 }, true)
         
-                local X, Y = MeasureText(Text, 16)
-                Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
+                -- Match Library.lua: Size = X * 2, Y * 2
+                local function ApplySize(NewText)
+                    local X, Y = GetTextBounds(NewText, 16)
+                    Btn.Text = NewText
+                    Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
+                end
+                ApplySize(Text)
         
                 MakeDraggable(Btn, Btn)
         
+                -- Hard reference table (not `self`), so a callback firing before the
+                -- local below is assigned still resolves correctly via upvalue.
+                local Button = { Button = Btn }
+                Button.SetText = function(_, NewText)
+                    ApplySize(NewText)
+                end
+        
+                -- Press/release click detection with drag threshold.
+                -- Btn.Activated is flaky on touch and can fire during construction,
+                -- so we compare release position against press position ourselves.
                 local PressPosition
                 Library:Connection(Btn.InputBegan, function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1
@@ -5236,14 +5254,24 @@ do -- Library
                         PressPosition = Btn.AbsolutePosition
                     end
                 end)
-                Library:Connection(Btn.Activated, function()
-                    if PressPosition and (Btn.AbsolutePosition - PressPosition).Magnitude > 10 then
+        
+                Library:Connection(UserInputService.InputEnded, function(Input)
+                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
+                        and Input.UserInputType ~= Enum.UserInputType.Touch then
                         return
                     end
-                    Callback()
+                    if not PressPosition then return end
+        
+                    local Moved = (Btn.AbsolutePosition - PressPosition).Magnitude
+                    PressPosition = nil
+        
+                    if Moved > 10 then return end
+                    if not Btn.Visible then return end
+                    if not (Btn.Parent and Btn.Parent.Parent) then return end
+        
+                    Callback(Button)
                 end)
         
-                -- Hover feedback using the library accent, like other buttons
                 Library:Connection(Btn.MouseEnter, function()
                     Btn.TextColor3 = Library.Theme.Default.Accent
                 end)
@@ -5251,14 +5279,7 @@ do -- Library
                     Btn.TextColor3 = Library.Theme.Default.TextColor
                 end)
         
-                return {
-                    Button = Btn,
-                    SetText = function(self, NewText)
-                        local X2, Y2 = MeasureText(NewText, 16)
-                        Btn.Text = NewText
-                        Btn.Size = UDim2.fromOffset(X2 * 2, Y2 * 2)
-                    end,
-                }
+                return Button
             end
         
             local ToggleButton = AddDraggableButton("Toggle", function()
@@ -5271,6 +5292,7 @@ do -- Library
                 LockButton:SetText(Library.CantDragForced and "Unlock" or "Lock")
             end)
         
+            -- Positioning exactly like Library.lua (MobileButtonsSide = "Left")
             ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
             ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
         
