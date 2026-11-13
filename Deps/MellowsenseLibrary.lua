@@ -5125,8 +5125,6 @@ do -- Library
         --
         --// Mobile Buttons \\--
         if IsMobile then
-            -- Use the library's own Floats layer so buttons get the gamesense theme,
-            -- correct scaling (UIScale via Library.Scales), outlines, and drag support.
             local MobileGui = Library:CreateObject("ScreenGui", {
                 ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
                 DisplayOrder = 1001,
@@ -5144,7 +5142,7 @@ do -- Library
                 Parent = MobileGui,
             }, true)
         
-            -- Measure text using the library's font/size, returning two numbers (fixes the mul error)
+            -- Return two numbers so `X * 2, Y * 2` doesn't blow up
             local function MeasureText(Text, TextSize)
                 local Label = Library:CreateObject("TextLabel", {
                     FontFace = Library.UI.NewFont,
@@ -5160,7 +5158,6 @@ do -- Library
                 return Bounds.X, Bounds.Y
             end
         
-            -- Drag support matching Library.lua's MakeDraggable
             local function MakeDraggable(UI, DragFrame)
                 local StartPos, FramePos, Dragging, Changed
         
@@ -5195,52 +5192,43 @@ do -- Library
                 end)
             end
         
-            -- Build a button using the library's theme colors/outline/corner + proper scaling
             local function AddDraggableButton(Text, Callback)
                 local Btn = Library:CreateObject("TextButton", {
-                    BackgroundColor3 = Color3.fromRGB(25, 25, 25), -- MainColor
+                    BackgroundColor3 = Color3.fromRGB(35, 35, 35),   -- MultiBox/Dropdown body
                     Position = UDim2.fromOffset(6, 6),
                     TextSize = 16,
                     Text = Text,
                     FontFace = Library.UI.NewFont,
-                    TextColor3 = Color3.fromRGB(255, 255, 255), -- FontColor
+                    TextColor3 = Library.Theme.Default.TextColor,   -- 205,205,205
                     ZIndex = 1,
                     AutoButtonColor = false,
                     Parent = Floats,
                 }, true)
         
-                -- Corner radius
                 Library:CreateObject("UICorner", {
                     CornerRadius = UDim.new(0, 4),
                     Parent = Btn,
                 }, true)
         
-                -- Outline + shadow (matches Library:AddOutline)
+                -- Border: 12,12,12 frame + 40,40,40 inner outline, matching Window()
                 Library:CreateObject("UIStroke", {
-                    Color = Color3.fromRGB(40, 40, 40), -- OutlineColor
+                    Color = Color3.fromRGB(40, 40, 40),
                     Thickness = 1,
                     ZIndex = 2,
                     Parent = Btn,
                 }, true)
                 Library:CreateObject("UIStroke", {
-                    Color = Color3.fromRGB(0, 0, 0), -- DarkColor
+                    Color = Color3.fromRGB(12, 12, 12),
                     Thickness = 1.5,
                     ZIndex = 1,
                     Parent = Btn,
                 }, true)
         
-                -- Scale with the rest of the UI (Library.lua does this via Library.Scales)
-                table.insert(Library.Scales, Library:CreateObject("UIScale", {
-                    Parent = Btn,
-                }, true))
-        
-                -- Size from text bounds (returns two numbers — no more mul error)
                 local X, Y = MeasureText(Text, 16)
                 Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
         
                 MakeDraggable(Btn, Btn)
         
-                -- Click detection with drag threshold
                 local PressPosition
                 Library:Connection(Btn.InputBegan, function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1
@@ -5255,6 +5243,14 @@ do -- Library
                     Callback()
                 end)
         
+                -- Hover feedback using the library accent, like other buttons
+                Library:Connection(Btn.MouseEnter, function()
+                    Btn.TextColor3 = Library.Theme.Default.Accent
+                end)
+                Library:Connection(Btn.MouseLeave, function()
+                    Btn.TextColor3 = Library.Theme.Default.TextColor
+                end)
+        
                 return {
                     Button = Btn,
                     SetText = function(self, NewText)
@@ -5265,19 +5261,16 @@ do -- Library
                 }
             end
         
-            --// Toggle Button \\--
             local ToggleButton = AddDraggableButton("Toggle", function()
                 Window.Visible = not Window.Visible
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
         
-            --// Lock Button \\--
             local LockButton = AddDraggableButton("Lock", function()
                 Library.CantDragForced = not Library.CantDragForced
                 LockButton:SetText(Library.CantDragForced and "Unlock" or "Lock")
             end)
         
-            --// Position matching Library.lua (MobileButtonsSide = "Left") \\--
             ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
             ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
         
