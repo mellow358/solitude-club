@@ -5144,7 +5144,6 @@ do -- Library
                 Parent = MobileGui,
             }, true)
         
-            -- Accurate measurement, mirrors Library.lua's GetTextBounds. Returns two numbers.
             local function GetTextBounds(Text, TextSize)
                 local Params = Instance.new("GetTextBoundsParams")
                 Params.Text = tostring(Text)
@@ -5152,13 +5151,10 @@ do -- Library
                 Params.Font = Library.UI.NewFont
                 Params.Size = TextSize
                 Params.Width = 10000
-                local Success, Bounds = pcall(function()
-                    return TextService:GetTextBoundsAsync(Params)
-                end)
+                local Success, Bounds = pcall(TextService.GetTextBoundsAsync, TextService, Params)
                 if Success and Bounds then
                     return math.ceil(Bounds.X), math.ceil(Bounds.Y)
                 end
-                -- Fallback if GetTextBoundsAsync is unavailable
                 return math.ceil(#tostring(Text) * TextSize * 0.55), math.ceil(TextSize * 1.25)
             end
         
@@ -5227,7 +5223,6 @@ do -- Library
                     Parent = Btn,
                 }, true)
         
-                -- Match Library.lua: Size = X * 2, Y * 2
                 local function ApplySize(NewText)
                     local X, Y = GetTextBounds(NewText, 16)
                     Btn.Text = NewText
@@ -5237,16 +5232,11 @@ do -- Library
         
                 MakeDraggable(Btn, Btn)
         
-                -- Hard reference table (not `self`), so a callback firing before the
-                -- local below is assigned still resolves correctly via upvalue.
                 local Button = { Button = Btn }
-                Button.SetText = function(_, NewText)
+                Button.SetText = function(self, NewText)
                     ApplySize(NewText)
                 end
         
-                -- Press/release click detection with drag threshold.
-                -- Btn.Activated is flaky on touch and can fire during construction,
-                -- so we compare release position against press position ourselves.
                 local PressPosition
                 Library:Connection(Btn.InputBegan, function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1
@@ -5287,12 +5277,22 @@ do -- Library
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
         
-            local LockButton = AddDraggableButton("Lock", function()
-                Library.CantDragForced = not Library.CantDragForced
-                LockButton:SetText(Library.CantDragForced and "Unlock" or "Lock")
+            -- MellowsenseLibrary has NO Lock system. The real drag is Roblox's built-in
+            -- Outline.Draggable. Locking = disable Draggable + Active on the window frame.
+            local Locked = false
+            local LockButton
+            LockButton = AddDraggableButton("Lock", function()
+                Locked = not Locked
+        
+                -- Real properties this library actually uses to make the window draggable
+                Outline.Draggable = not Locked
+                Outline.Active = not Locked
+        
+                if LockButton then
+                    LockButton:SetText(Locked and "Unlock" or "Lock")
+                end
             end)
         
-            -- Positioning exactly like Library.lua (MobileButtonsSide = "Left")
             ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
             ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
         
