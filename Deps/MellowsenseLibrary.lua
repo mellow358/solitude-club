@@ -20,13 +20,15 @@ local Client = Players.LocalPlayer
 local Camera = Workspace:FindFirstChildWhichIsA("Camera")
 local Viewport = Camera.ViewportSize
 --
+--// Device Detection \\--
 local IsMobile = false
 do
-    pcall(function()
-        local Platform = UserInputService:GetPlatform()
-        IsMobile = (Platform == Enum.Platform.Android or Platform == Enum.Platform.IOS)
+    local success, platform = pcall(function()
+        return UserInputService:GetPlatform()
     end)
-    if not IsMobile then
+    if success then
+        IsMobile = (platform == Enum.Platform.Android or platform == Enum.Platform.IOS)
+    else
         IsMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
     end
 end
@@ -45,9 +47,10 @@ do -- Library
         UID = "1",
         UnsafeMode = false,
         InitTime = os.clock(),
+        IsMobile = IsMobile,
         UI = {
             Name = "solitude.club",
-            CloseBind = Enum.KeyCode.Delete,
+            CloseBind = Enum.KeyCode.Insert,
             SectionResizeIncrements = 1,
             WatermarkRefreshRate = 1,
             MainUI = nil,
@@ -417,18 +420,19 @@ do -- Library
     --
     function Library:Fade(State, Table, MainUI, Speed)
         local IsMainUI = Table == Library.Objects
-    
+        --
         MainUI.Active = State
-    
+        --
         if State then
             MainUI.Visible = true
         end
-    
+        --
         if IsMainUI then
             Library.UI.Faded = not State
         end
-    
+        --  handle toggle transparency when fading out since im not using fade out for now as it causes fps issues
         if not State and IsMainUI then
+            -- find all toggle elements and force them transparent immediately instead of waiting since some things may not leave instantly
             for _, obj in pairs(MainUI:GetDescendants()) do
                 if obj.ClassName == "Frame" then
                     if obj.Name == "ToggleMain" then
@@ -437,40 +441,49 @@ do -- Library
                 end
             end
         end
-    
+        --
         for _, Object in Table do
-            -- FIX: only skip when hiding. When showing, always restore, even if [3] is true,
-            -- because [3] gets set by SetVisible(true) before Fade runs.
-            if State or not Object[3] then
+            if not Object[3] then
                 if Object[1].ClassName == "Frame" and (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
+                    -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                     Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                 elseif Object[1].ClassName == "ImageLabel" or Object[1].ClassName == "ImageButton" then
                     if (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
+                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                         Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                     end
+                    --
                     if (Object[2]["ImageTransparency"] or 0) ~= 1 then
+                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {ImageTransparency = State and (Object[2]["ImageTransparency"] or 0) or 1})
                         Object[1].ImageTransparency = State and (Object[2]["ImageTransparency"] or 0) or 1
                     end
                 elseif Object[1].ClassName == "TextLabel" or Object[1].ClassName == "TextButton" or Object[1].ClassName == "TextBox" then
                     if (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
+                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                         Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                     end
+                    --
                     if (Object[2]["TextTransparency"] or 0) ~= 1 then
+                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {TextTransparency = State and (Object[2]["TextTransparency"] or 0) or 1})
                         Object[1].TextTransparency = State and (Object[2]["TextTransparency"] or 0) or 1
                     end
                 elseif Object[1].ClassName == "ScrollingFrame" then
                     if (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
+                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                         Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                     end
+                    --
                     if (Object[2]["ScrollBarImageTransparency"] or 0) ~= 1 then
+                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {ScrollBarImageTransparency = State and (Object[2]["ScrollBarImageTransparency"] or 0) or 1})
                         Object[1].ScrollBarImageTransparency = State and (Object[2]["ScrollBarImageTransparency"] or 0) or 1
                     end
                 elseif Object[1].ClassName == "UIStroke" then
+                    -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {Transparency = State and (Object[2]["Transparency"] or 0) or 1})
                     Object[1].Transparency = State and (Object[2]["Transparency"] or 0) or 1
                 end
             end
         end
-    
+        --
         if not State then
             task.delay(Speed, function()
                 if not MainUI.Parent then return end
@@ -756,11 +769,9 @@ do -- Library
         do -- Functions
             function ColorPicker:SetVisible(Bool)
                 ColorPickerOutline_1.Visible = Bool
+                --
                 if Bool == false then
-                    ColorPicker:RemoveFrame(true)   -- was missing `true`; use fast destroy so state is clean
-                    ColorPicker.Active = false      -- was missing; leaves Active=true causing toggle invert
-                    ColorPicker.ActiveFrame = false -- same for keybind popup
-                    ColorPicker:RemoveOtherFrame(true)
+                    ColorPicker:RemoveFrame()
                 end
             end
             --
@@ -1686,28 +1697,24 @@ do -- Library
         --
         do -- Functions
             function Keybind:SetVisible(Bool)
-    local OldValues = Library.Objects[KeybindObject]
-
-    Keybind.Hiding = not Bool
-
-    Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
-
-    -- Force-close the mode-picker popup so it doesn't orphan on ScreenGUI when hidden.
-    if Bool == false then
-        Keybind.ActiveFrame = false
-        Keybind:RemoveFrame(true)
-    end
-
-    Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075)
-
-    Library.UI.Resizing = true
-    Library:TweenObject(KeybindObject, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-        Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
-        Library.UI.Resizing = false
-    end)
-end
+                local OldValues = Library.Objects[KeybindObject]
+                --
+                Keybind.Hiding = not Bool
+                --
+                if Bool then
+                    Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], true}
+                end
+                --
+                Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075)
+                Library:TweenObject(KeybindObject, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
+                    if not Bool then
+                        Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], false}
+                    end
+                end)
+            end
             --
             function Keybind:Set(Key)
+                if Keybind.Hiding then return end
                 if typeof(Key) == "boolean" then return end
                 --
                 if typeof(Key) == "EnumItem" then
@@ -1760,6 +1767,7 @@ end
             end
             --
             function Keybind:Toggle(Bool)
+                if Keybind.Hiding then return end
                 --
                 if Bool == nil then
                     Keybind.State = not Keybind.State
@@ -2372,29 +2380,21 @@ end
             end
             --
             function MultiBox:SetVisible(Bool)
-    local OldValues = Library.Objects[PreviewMultiBox_5]
-
-    MultiBox.Hiding = not Bool
-
-    Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
-
-    -- Force-close the popup so it doesn't orphan on ScreenGUI when hidden.
-    if Bool == false then
-        if MultiBox.Open then
-            MultiBox.Open = false
-            Library:Fade(false, Library:GetObjectsTable(MultiBoxMainOutline, true), MultiBoxMainOutline, 0)
-            MultiBoxMainOutline.Visible = false
-        end
-    end
-
-    Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075)
-
-    Library.UI.Resizing = true
-    Library:TweenObject(PreviewMultiBox_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-        Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
-        Library.UI.Resizing = false
-    end)
-end
+                local OldValues = Library.Objects[PreviewMultiBox_5]
+                --
+                MultiBox.Hiding = not Bool
+                --
+                if Bool then
+                    Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], true}
+                end
+                --
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075)
+                Library:TweenObject(PreviewMultiBox_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
+                    if not Bool then
+                        Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], false}
+                    end
+                end)
+            end
             --
             function MultiBox:AddValue(Value)
                 local Item = {
@@ -2529,6 +2529,8 @@ end
                 --
                 do -- Connections
                     Library:Connection(Button_4.MouseButton1Click, function()
+                        if MultiBox.Hiding then return end
+                        --
                         Item:Toggle()
                     end)
                     --
@@ -2655,6 +2657,8 @@ end
         --
         do -- Connections
             Library:Connection(Button_44.MouseButton1Click, function()
+                if MultiBox.Hiding then return end
+                --
                 MultiBox:Toggle()
             end)
             --
@@ -2689,11 +2693,7 @@ end
             MultiBox:SetVisible(false)
         end
         --
-        if not Options.Hiding then
-            MultiBox:Toggle(true)
-        else
-            MultiBox.Open = false
-        end
+        MultiBox:Toggle(true)
         --
         return MultiBox
     end
@@ -2896,29 +2896,21 @@ end
             end
             --
             function Dropdown:SetVisible(Bool)
-    local OldValues = Library.Objects[PreviewDropdown_5]
-
-    Dropdown.Hiding = not Bool
-
-    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
-
-    -- Force-close the popup so it doesn't orphan on ScreenGUI when hidden.
-    if Bool == false then
-        if Dropdown.Open then
-            Dropdown.Open = false
-            Library:Fade(false, Library:GetObjectsTable(DropdownMainOutline, true), DropdownMainOutline, 0)
-            DropdownMainOutline.Visible = false
-        end
-    end
-
-    Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
-
-    Library.UI.Resizing = true
-    Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
-        Library.UI.Resizing = false
-    end)
-end
+                local OldValues = Library.Objects[PreviewDropdown_5]
+                --
+                Dropdown.Hiding = not Bool
+                --
+                if Bool then
+                    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
+                end
+                --
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
+                Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
+                    if not Bool then
+                        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
+                    end
+                end)
+            end
             --
             function Dropdown:AddValue(Value)
                 local Item = {
@@ -3004,6 +2996,8 @@ end
                 --
                 do -- Connections
                     Library:Connection(Button_4.MouseButton1Click, function()
+                        if Dropdown.Hiding then return end
+                        --
                         Item:Activate()
                         Dropdown:Toggle()
                     end)
@@ -3128,6 +3122,8 @@ end
         --
         do -- Connections
             Library:Connection(Button_44.MouseButton1Click, function()
+                if Dropdown.Hiding then return end
+                --
                 Dropdown:Toggle()
             end)
             --
@@ -3160,11 +3156,7 @@ end
             Dropdown:SetVisible(false)
         end
         --
-        if not Options.Hiding then
-            Dropdown:Toggle(true)
-        else
-            Dropdown.Open = false
-        end
+        Dropdown:Toggle(true)
         --
         return Dropdown
     end
@@ -3406,7 +3398,7 @@ end
         end
         --
         local function SetValue(Value, IgnoreLimit)
-            if (not Value) then return end
+            if (not Value) or Slider.Hiding then return end
             --
             local OriginalValue = Value
             -- check if we should allow values beyond the max
@@ -3463,18 +3455,19 @@ end
         --
         function Slider:SetVisible(Bool)
             local OldValues = Library.Objects[PreviewSlider]
-        
+            --
             Slider.Hiding = not Bool
             SliderValue.Visible = Bool
-        
-            Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], not Bool}
-        
+            --
+            if Bool then
+                Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], true}
+            end
+            --
             Library:Fade(Bool, Library:GetObjectsTable(PreviewSlider), PreviewSlider, 0.075)
-        
-            Library.UI.Resizing = true
             Library:TweenObject(PreviewSlider, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 7) or UDim2.new(1, 0, 0, 20)) or UDim2.new(1, 0, 0, -10)}, function()
-                Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], not Bool}
-                Library.UI.Resizing = false
+                if not Bool then
+                    Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], false}
+                end
             end)
         end
         --
@@ -3748,25 +3741,24 @@ end
         --
         do -- Functions
             function Toggle:ToggleGUI(Bool)
-    if Bool == nil then
-        Toggle.State = not Toggle.State
-    else
-        Toggle.State = Bool
-    end
-    --
-    Library:TweenObject(ToggleMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = Toggle.State and 0 or 1})
-    
-    -- Only update the stored base transparency when the element is NOT hidden.
-    -- If we overwrite it while hidden, the Fade(true, ...) on unhide will restore
-    -- the wrong transparency and the toggle will visually desync from its state.
-    if Library.Objects[ToggleMain] and not Toggle.Hiding then
-        Library.Objects[ToggleMain][2].BackgroundTransparency = Toggle.State and 0 or 1
-    end
-    
-    --
-    Library.Flags[Options.Flag] = Toggle
-    Options.Callback(Toggle.State)
-end
+                if Bool == nil then
+                    Toggle.State = not Toggle.State
+                else
+                    Toggle.State = Bool
+                end
+                --
+                Library:TweenObject(ToggleMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = Toggle.State and 0 or 1})
+                
+                -- update the stored transparency value in the objects table, this is for the temp fix for the toggle out and toggle in 
+                -- since this uses instant out and instant in instead of the normal fade in and fade out
+                if Library.Objects[ToggleMain] then
+                    Library.Objects[ToggleMain][2].BackgroundTransparency = Toggle.State and 0 or 1
+                end
+                
+                --
+                Library.Flags[Options.Flag] = Toggle
+                Options.Callback(Toggle.State)
+            end
             --
             function Toggle:GetName()
                 return Options.Name
@@ -3802,26 +3794,21 @@ end
             end
             --
             function Toggle:SetVisible(Bool)
-    local OldValues = Library.Objects[PreviewToggle]
-
-    Toggle.Hiding = not Bool
-
-    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
-
-    -- Restore ToggleMain's base transparency to match the current state so unhide
-    -- fades in with the correct on/off visual instead of whatever was cached last.
-    if Library.Objects[ToggleMain] then
-        Library.Objects[ToggleMain][2].BackgroundTransparency = Toggle.State and 0 or 1
-    end
-
-    Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
-
-    Library.UI.Resizing = true
-    Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
-        Library.UI.Resizing = false
-    end)
-end
+                local OldValues = Library.Objects[PreviewToggle]
+                --
+                Toggle.Hiding = not Bool
+                --
+                if Bool then
+                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
+                end
+                --
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+                Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
+                    if not Bool then
+                        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
+                    end
+                end)
+            end
             --
             function Toggle:ColorPicker(Options)
                 Options = Library:Validate({
@@ -3908,6 +3895,8 @@ end
             --
             Library:Connection(Button_9.MouseButton1Click, function()
                 if Library.UI.Faded then return end
+                --
+                if Toggle.Hiding then return end
                 --
                 Toggle:ToggleGUI()
             end)
@@ -3997,17 +3986,18 @@ end
             --
             function Label:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewLabel]
-            
+                --
                 Label.Hiding = not Bool
-            
-                Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], not Bool}
-            
+                --
+                if Bool then
+                    Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], true}
+                end
+                --
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewLabel), PreviewLabel, 0.075)
-            
-                Library.UI.Resizing = true
                 Library:TweenObject(PreviewLabel, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
+                    if not Bool then
+                        Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], false}
+                    end
                 end)
             end
             --
@@ -4201,18 +4191,19 @@ end
         do -- Functions
             function TextBox:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewTextBox]
-            
+                --
                 TextBox.Hiding = not Bool
                 TextBoxObject.Visible = Bool
-            
-                Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], not Bool}
-            
+                --
+                if Bool then
+                    Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], true}
+                end
+                --
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewTextBox), PreviewTextBox, 0.075)
-            
-                Library.UI.Resizing = true
                 Library:TweenObject(PreviewTextBox, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
+                    if not Bool then
+                        Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], false}
+                    end
                 end)
             end
             --
@@ -4239,6 +4230,12 @@ end
             --
             Library:Connection(TextBoxObject.Focused, function()
                 if Library.UI.Faded then return end
+                --
+                if TextBox.Hiding then
+                    TextBoxObject:ReleaseFocus()
+                    --
+                    return
+                end
                 --
                 TextBox.Focused = true
                 --
@@ -4398,17 +4395,18 @@ end
             --
             function List:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewList]
-            
+                --
                 TextBox.Object.Visible = Bool
-            
-                Library.Objects[PreviewList] = {PreviewList, OldValues[2], not Bool}
-            
+                --
+                if Bool then
+                    Library.Objects[PreviewList] = {PreviewList, OldValues[2], true}
+                end
+                --
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewList, false), PreviewList, 0.075)
-            
-                Library.UI.Resizing = true
                 Library:TweenObject(PreviewList, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, Options.Size) or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[PreviewList] = {PreviewList, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
+                    if not Bool then
+                        Library.Objects[PreviewList] = {PreviewList, OldValues[2], false}
+                    end
                 end)
             end
             --
@@ -4773,17 +4771,18 @@ end
             --
             function Button:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewButton]
-            
+                --
                 Button.Hiding = not Bool
-            
-                Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], not Bool}
-            
+                --
+                if Bool then
+                    Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], true}
+                end
+                --
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewButton), PreviewButton, 0.075)
-            
-                Library.UI.Resizing = true
                 Library:TweenObject(PreviewButton, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
+                    if not Bool then
+                        Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], false}
+                    end
                 end)
             end
             --
@@ -4826,6 +4825,8 @@ end
         do -- Connections
             Library:Connection(Button_6.MouseButton1Down, function()
                 if Library.UI.Faded then return end
+                --
+                if Button.Hiding then return end
                 --
                 Library:TweenObject(ButtonMain_1, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(180, 180, 180)})
                 --
@@ -4892,7 +4893,7 @@ end
         Options = Library:Validate({
             Name = "solitude.club",
             Size = IsMobile and UDim2.new(0, 612, 0, 400) or UDim2.new(0, 700, 0, 612),
-            MinResize = UDim2.new(0, 500, 0, 400),
+            MinResize = IsMobile and UDim2.new(0, 500, 0, 400) or UDim2.new(0, 600, 0, 500),
             MaxResize = UDim2.new(0, 10000, 0, 10000),
             CloseBind = Enum.KeyCode.Insert,
         }, Options or {})
@@ -5125,181 +5126,84 @@ end
             Library:Resizable(Outline, ResizeButton, Options.MinResize, Options.MaxResize)
         end
         --
-        --// Mobile Buttons \\--
+        --// Mobile Toggle & Lock Buttons \\--
         if IsMobile then
-            local TextService = game:GetService("TextService")
-        
-            local MobileGui = Library:CreateObject("ScreenGui", {
-                ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
-                DisplayOrder = 1001,
-                ResetOnSpawn = false,
-                IgnoreGuiInset = true,
-                Name = "\0",
-                Parent = gethui()
-            }, true)
-        
-            local Floats = Library:CreateObject("Frame", {
-                BackgroundTransparency = 1,
-                Size = UDim2.fromScale(1, 1),
-                ZIndex = 10,
-                Active = false,
-                Parent = MobileGui,
-            }, true)
-        
-            local function GetTextBounds(Text, TextSize)
-                local Params = Instance.new("GetTextBoundsParams")
-                Params.Text = tostring(Text)
-                Params.RichText = false
-                Params.Font = Library.UI.NewFont
-                Params.Size = TextSize
-                Params.Width = 10000
-                local Success, Bounds = pcall(TextService.GetTextBoundsAsync, TextService, Params)
-                if Success and Bounds then
-                    return math.ceil(Bounds.X), math.ceil(Bounds.Y)
-                end
-                return math.ceil(#tostring(Text) * TextSize * 0.55), math.ceil(TextSize * 1.25)
-            end
-        
-            local function MakeDraggable(UI, DragFrame)
-                local StartPos, FramePos, Dragging, Changed
-        
-                Library:Connection(DragFrame.InputBegan, function(Input)
-                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                        and Input.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    StartPos = Input.Position
-                    FramePos = UI.Position
-                    Dragging = true
-        
-                    Changed = Input.Changed:Connect(function()
-                        if Input.UserInputState ~= Enum.UserInputState.End then return end
-                        Dragging = false
-                        if Changed and Changed.Connected then
-                            Changed:Disconnect()
-                            Changed = nil
-                        end
-                    end)
-                end)
-        
-                Library:Connection(UserInputService.InputChanged, function(Input)
-                    if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement
-                        or Input.UserInputType == Enum.UserInputType.Touch) then
-                        local Delta = Input.Position - StartPos
-                        UI.Position = UDim2.new(
-                            FramePos.X.Scale, FramePos.X.Offset + Delta.X,
-                            FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y
-                        )
-                    end
-                end)
-            end
-        
-            local function AddDraggableButton(Text, Callback)
-                local Btn = Library:CreateObject("TextButton", {
+            local function CreateMobileButton(Text, Position, Order)
+                local BtnOutline = Library:CreateObject("Frame", {
+                    Name = "MobileBtn_" .. Text,
+                    AnchorPoint = Vector2.new(0, 0),
+                    Position = Position,
+                    Size = UDim2.new(0, 60, 0, 22),
+                    BorderSizePixel = 0,
+                    ZIndex = 10001,
+                    BackgroundColor3 = Color3.fromRGB(12, 12, 12),
+                    Parent = Library.UI.ScreenGUI
+                }, true)
+
+                local BtnInner = Library:CreateObject("Frame", {
+                    Name = "Inner",
+                    Position = UDim2.new(0, 1, 0, 1),
+                    Size = UDim2.new(1, -2, 1, -2),
+                    BorderSizePixel = 0,
+                    ZIndex = 10001,
                     BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-                    Position = UDim2.fromOffset(6, 6),
-                    TextSize = 16,
-                    Text = Text,
-                    FontFace = Library.UI.NewFont,
-                    TextColor3 = Library.Theme.Default.TextColor,
-                    ZIndex = 1,
-                    AutoButtonColor = false,
-                    Parent = Floats,
+                    Parent = BtnOutline
                 }, true)
-        
-                Library:CreateObject("UICorner", {
-                    CornerRadius = UDim.new(0, 4),
-                    Parent = Btn,
+
+                local BtnLabel = Library:CreateObject("TextLabel", {
+                    Name = "Text",
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    ZIndex = 10002,
+                    FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                    RichText = true,
+                    Text = "<b>" .. Text .. "</b>",
+                    TextColor3 = Color3.fromRGB(208, 208, 208),
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    Parent = BtnOutline
                 }, true)
-        
-                Library:CreateObject("UIStroke", {
-                    Color = Color3.fromRGB(40, 40, 40),
-                    Thickness = 1,
-                    ZIndex = 2,
-                    Parent = Btn,
+
+                local BtnClick = Library:CreateObject("TextButton", {
+                    Name = "Button",
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    Text = "",
+                    TextTransparency = 1,
+                    ZIndex = 10003,
+                    Parent = BtnOutline
                 }, true)
-                Library:CreateObject("UIStroke", {
-                    Color = Color3.fromRGB(12, 12, 12),
-                    Thickness = 1.5,
-                    ZIndex = 1,
-                    Parent = Btn,
-                }, true)
-        
-                local function ApplySize(NewText)
-                    local X, Y = GetTextBounds(NewText, 16)
-                    Btn.Text = NewText
-                    Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
-                end
-                ApplySize(Text)
-        
-                MakeDraggable(Btn, Btn)
-        
-                local Button = { Button = Btn }
-                Button.SetText = function(self, NewText)
-                    ApplySize(NewText)
-                end
-        
-                local PressPosition
-                Library:Connection(Btn.InputBegan, function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1
-                        or Input.UserInputType == Enum.UserInputType.Touch then
-                        PressPosition = Btn.AbsolutePosition
-                    end
+
+                Library:Connection(BtnOutline.MouseEnter, function()
+                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                    })
                 end)
-        
-                Library:Connection(UserInputService.InputEnded, function(Input)
-                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                        and Input.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    if not PressPosition then return end
-        
-                    local Moved = (Btn.AbsolutePosition - PressPosition).Magnitude
-                    PressPosition = nil
-        
-                    if Moved > 10 then return end
-                    if not Btn.Visible then return end
-                    if not (Btn.Parent and Btn.Parent.Parent) then return end
-        
-                    Callback(Button)
+                Library:Connection(BtnOutline.MouseLeave, function()
+                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                    })
                 end)
-        
-                Library:Connection(Btn.MouseEnter, function()
-                    Btn.TextColor3 = Library.Theme.Default.Accent
-                end)
-                Library:Connection(Btn.MouseLeave, function()
-                    Btn.TextColor3 = Library.Theme.Default.TextColor
-                end)
-        
-                return Button
+
+                return BtnOutline, BtnLabel, BtnClick
             end
-        
-            local ToggleButton = AddDraggableButton("Toggle", function()
+
+            local ToggleBtn, ToggleLabel, ToggleClick = CreateMobileButton("Toggle", UDim2.new(0, 5, 0, 5), 1)
+            local LockBtn, LockLabel, LockClick = CreateMobileButton("Lock", UDim2.new(0, 5, 0, 32), 2)
+
+            Library.UI.MobileButtons = {ToggleBtn, LockBtn}
+
+            Library:Connection(ToggleClick.MouseButton1Click, function()
                 Window.Visible = not Window.Visible
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
-        
-            -- MellowsenseLibrary has NO Lock system. The real drag is Roblox's built-in
-            -- Outline.Draggable. Locking = disable Draggable + Active on the window frame.
+
             local Locked = false
-            local LockButton
-            LockButton = AddDraggableButton("Lock", function()
+            Library:Connection(LockClick.MouseButton1Click, function()
                 Locked = not Locked
-        
-                -- Real properties this library actually uses to make the window draggable
                 Outline.Draggable = not Locked
-                Outline.Active = not Locked
-        
-                if LockButton then
-                    LockButton:SetText(Locked and "Unlock" or "Lock")
-                end
+                LockLabel.Text = Locked and "<b>Unlock</b>" or "<b>Lock</b>"
             end)
-        
-            ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
-            ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
-        
-            LockButton.Button.AnchorPoint = Vector2.new(0, 0)
-            LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
         end
         --
         function Window:CreateTab(Options)
@@ -7405,6 +7309,13 @@ end
             --
             for Index, Value in Library.Connections do
                 Value:Disconnect()
+            end
+            --
+            --// Clean up mobile buttons \\--
+            for _, Obj in Library.UI.ScreenGUI:GetChildren() do
+                if Obj.Name:match("^MobileBtn_") then
+                    Obj:Destroy()
+                end
             end
             --
             for _, Objects in Library.Objects do
