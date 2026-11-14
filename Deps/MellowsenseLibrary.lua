@@ -2899,6 +2899,10 @@ do -- Library
                 local OldValues = Library.Objects[PreviewDropdown_5]
                 --
                 Dropdown.Hiding = not Bool
+                
+                PreviewDropdown_5.Active = Bool
+                DropdownOutline_5.Active = Bool
+                Button_44.Active = Bool
                 --
                 if Bool then
                     Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
@@ -3797,7 +3801,7 @@ do -- Library
                 Toggle.Hiding = not Bool
                 --
                 if Bool then
-                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
+                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
                 end
                 --
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
