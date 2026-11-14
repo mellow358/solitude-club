@@ -2896,25 +2896,33 @@ do -- Library
             end
             --
             function Dropdown:SetVisible(Bool)
-                local OldValues = Library.Objects[PreviewDropdown_5]
-                --
-                Dropdown.Hiding = not Bool
-                
-                PreviewDropdown_5.Active = Bool
-                DropdownOutline_5.Active = Bool
-                Button_44.Active = Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
-                end
-                --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
-                Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
-                    end
-                end)
-            end
+    local OldValues = Library.Objects[PreviewDropdown_5]
+    --
+    Dropdown.Hiding = not Bool
+    --
+    if Bool then
+        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
+        PreviewDropdown_5.Visible = true
+    end
+    --
+    Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
+    Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
+        if not Bool then
+            Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
+            PreviewDropdown_5.Visible = false
+        end
+    end)
+
+    -- FORCE CLICKS TO WORK
+    Button_44.Active = Bool
+    DropdownOutline_5.Active = Bool
+    if Bool then
+        task.delay(Library.UI.TweenSpeed + 0.05, function()
+            if Button_44 then Button_44.Active = true end
+            if DropdownOutline_5 then DropdownOutline_5.Active = true end
+        end)
+    end
+end
             --
             function Dropdown:AddValue(Value)
                 local Item = {
