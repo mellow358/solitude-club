@@ -3800,16 +3800,8 @@ do -- Library
     PreviewToggle.Active = Bool
     Button_9.Active = Bool
     
-    if Bool then
-        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
-        PreviewToggle.Size = UDim2.new(1, 0, 0, 8)
-    else
-        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
-        PreviewToggle.Size = UDim2.new(1, 0, 0, 0)
-    end
     
-    -- Just fade the transparency, don't tween the size
-    Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+    
 end
             --
             function Toggle:ColorPicker(Options)
