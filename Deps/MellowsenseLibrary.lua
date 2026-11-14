@@ -4893,7 +4893,7 @@ do -- Library
         Options = Library:Validate({
             Name = "solitude.club",
             Size = IsMobile and UDim2.new(0, 612, 0, 400) or UDim2.new(0, 700, 0, 612),
-            MinResize = IsMobile and UDim2.new(0, 500, 0, 400) or UDim2.new(0, 600, 0, 500),
+            MinResize = UDim2.new(0, 600, 0, 500),
             MaxResize = UDim2.new(0, 10000, 0, 10000),
             CloseBind = Enum.KeyCode.Insert,
         }, Options or {})
@@ -5126,84 +5126,181 @@ do -- Library
             Library:Resizable(Outline, ResizeButton, Options.MinResize, Options.MaxResize)
         end
         --
-        --// Mobile Toggle & Lock Buttons \\--
+        --// Mobile Buttons \\--
         if IsMobile then
-            local function CreateMobileButton(Text, Position, Order)
-                local BtnOutline = Library:CreateObject("Frame", {
-                    Name = "MobileBtn_" .. Text,
-                    AnchorPoint = Vector2.new(0, 0),
-                    Position = Position,
-                    Size = UDim2.new(0, 60, 0, 22),
-                    BorderSizePixel = 0,
-                    ZIndex = 10001,
-                    BackgroundColor3 = Color3.fromRGB(12, 12, 12),
-                    Parent = Library.UI.ScreenGUI
-                }, true)
-
-                local BtnInner = Library:CreateObject("Frame", {
-                    Name = "Inner",
-                    Position = UDim2.new(0, 1, 0, 1),
-                    Size = UDim2.new(1, -2, 1, -2),
-                    BorderSizePixel = 0,
-                    ZIndex = 10001,
-                    BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-                    Parent = BtnOutline
-                }, true)
-
-                local BtnLabel = Library:CreateObject("TextLabel", {
-                    Name = "Text",
-                    Size = UDim2.new(1, 0, 1, 0),
-                    BackgroundTransparency = 1,
-                    ZIndex = 10002,
-                    FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-                    RichText = true,
-                    Text = "<b>" .. Text .. "</b>",
-                    TextColor3 = Color3.fromRGB(208, 208, 208),
-                    TextSize = 14,
-                    TextXAlignment = Enum.TextXAlignment.Center,
-                    Parent = BtnOutline
-                }, true)
-
-                local BtnClick = Library:CreateObject("TextButton", {
-                    Name = "Button",
-                    Size = UDim2.new(1, 0, 1, 0),
-                    BackgroundTransparency = 1,
-                    Text = "",
-                    TextTransparency = 1,
-                    ZIndex = 10003,
-                    Parent = BtnOutline
-                }, true)
-
-                Library:Connection(BtnOutline.MouseEnter, function()
-                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                    })
-                end)
-                Library:Connection(BtnOutline.MouseLeave, function()
-                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-                        BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-                    })
-                end)
-
-                return BtnOutline, BtnLabel, BtnClick
+            local TextService = game:GetService("TextService")
+        
+            local MobileGui = Library:CreateObject("ScreenGui", {
+                ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
+                DisplayOrder = 1001,
+                ResetOnSpawn = false,
+                IgnoreGuiInset = true,
+                Name = "\0",
+                Parent = gethui()
+            }, true)
+        
+            local Floats = Library:CreateObject("Frame", {
+                BackgroundTransparency = 1,
+                Size = UDim2.fromScale(1, 1),
+                ZIndex = 10,
+                Active = false,
+                Parent = MobileGui,
+            }, true)
+        
+            local function GetTextBounds(Text, TextSize)
+                local Params = Instance.new("GetTextBoundsParams")
+                Params.Text = tostring(Text)
+                Params.RichText = false
+                Params.Font = Library.UI.NewFont
+                Params.Size = TextSize
+                Params.Width = 10000
+                local Success, Bounds = pcall(TextService.GetTextBoundsAsync, TextService, Params)
+                if Success and Bounds then
+                    return math.ceil(Bounds.X), math.ceil(Bounds.Y)
+                end
+                return math.ceil(#tostring(Text) * TextSize * 0.55), math.ceil(TextSize * 1.25)
             end
-
-            local ToggleBtn, ToggleLabel, ToggleClick = CreateMobileButton("Toggle", UDim2.new(0, 5, 0, 5), 1)
-            local LockBtn, LockLabel, LockClick = CreateMobileButton("Lock", UDim2.new(0, 5, 0, 32), 2)
-
-            Library.UI.MobileButtons = {ToggleBtn, LockBtn}
-
-            Library:Connection(ToggleClick.MouseButton1Click, function()
+        
+            local function MakeDraggable(UI, DragFrame)
+                local StartPos, FramePos, Dragging, Changed
+        
+                Library:Connection(DragFrame.InputBegan, function(Input)
+                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
+                        and Input.UserInputType ~= Enum.UserInputType.Touch then
+                        return
+                    end
+                    StartPos = Input.Position
+                    FramePos = UI.Position
+                    Dragging = true
+        
+                    Changed = Input.Changed:Connect(function()
+                        if Input.UserInputState ~= Enum.UserInputState.End then return end
+                        Dragging = false
+                        if Changed and Changed.Connected then
+                            Changed:Disconnect()
+                            Changed = nil
+                        end
+                    end)
+                end)
+        
+                Library:Connection(UserInputService.InputChanged, function(Input)
+                    if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement
+                        or Input.UserInputType == Enum.UserInputType.Touch) then
+                        local Delta = Input.Position - StartPos
+                        UI.Position = UDim2.new(
+                            FramePos.X.Scale, FramePos.X.Offset + Delta.X,
+                            FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y
+                        )
+                    end
+                end)
+            end
+        
+            local function AddDraggableButton(Text, Callback)
+                local Btn = Library:CreateObject("TextButton", {
+                    BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+                    Position = UDim2.fromOffset(6, 6),
+                    TextSize = 16,
+                    Text = Text,
+                    FontFace = Library.UI.NewFont,
+                    TextColor3 = Library.Theme.Default.TextColor,
+                    ZIndex = 1,
+                    AutoButtonColor = false,
+                    Parent = Floats,
+                }, true)
+        
+                Library:CreateObject("UICorner", {
+                    CornerRadius = UDim.new(0, 4),
+                    Parent = Btn,
+                }, true)
+        
+                Library:CreateObject("UIStroke", {
+                    Color = Color3.fromRGB(40, 40, 40),
+                    Thickness = 1,
+                    ZIndex = 2,
+                    Parent = Btn,
+                }, true)
+                Library:CreateObject("UIStroke", {
+                    Color = Color3.fromRGB(12, 12, 12),
+                    Thickness = 1.5,
+                    ZIndex = 1,
+                    Parent = Btn,
+                }, true)
+        
+                local function ApplySize(NewText)
+                    local X, Y = GetTextBounds(NewText, 16)
+                    Btn.Text = NewText
+                    Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
+                end
+                ApplySize(Text)
+        
+                MakeDraggable(Btn, Btn)
+        
+                local Button = { Button = Btn }
+                Button.SetText = function(self, NewText)
+                    ApplySize(NewText)
+                end
+        
+                local PressPosition
+                Library:Connection(Btn.InputBegan, function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1
+                        or Input.UserInputType == Enum.UserInputType.Touch then
+                        PressPosition = Btn.AbsolutePosition
+                    end
+                end)
+        
+                Library:Connection(UserInputService.InputEnded, function(Input)
+                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
+                        and Input.UserInputType ~= Enum.UserInputType.Touch then
+                        return
+                    end
+                    if not PressPosition then return end
+        
+                    local Moved = (Btn.AbsolutePosition - PressPosition).Magnitude
+                    PressPosition = nil
+        
+                    if Moved > 10 then return end
+                    if not Btn.Visible then return end
+                    if not (Btn.Parent and Btn.Parent.Parent) then return end
+        
+                    Callback(Button)
+                end)
+        
+                Library:Connection(Btn.MouseEnter, function()
+                    Btn.TextColor3 = Library.Theme.Default.Accent
+                end)
+                Library:Connection(Btn.MouseLeave, function()
+                    Btn.TextColor3 = Library.Theme.Default.TextColor
+                end)
+        
+                return Button
+            end
+        
+            local ToggleButton = AddDraggableButton("Toggle", function()
                 Window.Visible = not Window.Visible
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
-
+        
+            -- MellowsenseLibrary has NO Lock system. The real drag is Roblox's built-in
+            -- Outline.Draggable. Locking = disable Draggable + Active on the window frame.
             local Locked = false
-            Library:Connection(LockClick.MouseButton1Click, function()
+            local LockButton
+            LockButton = AddDraggableButton("Lock", function()
                 Locked = not Locked
+        
+                -- Real properties this library actually uses to make the window draggable
                 Outline.Draggable = not Locked
-                LockLabel.Text = Locked and "<b>Unlock</b>" or "<b>Lock</b>"
+                Outline.Active = not Locked
+        
+                if LockButton then
+                    LockButton:SetText(Locked and "Unlock" or "Lock")
+                end
             end)
+        
+            ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
+            ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
+        
+            LockButton.Button.AnchorPoint = Vector2.new(0, 0)
+            LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
         end
         --
         function Window:CreateTab(Options)
