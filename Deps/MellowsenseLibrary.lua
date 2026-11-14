@@ -2896,33 +2896,21 @@ do -- Library
             end
             --
             function Dropdown:SetVisible(Bool)
-    local OldValues = Library.Objects[PreviewDropdown_5]
-    --
-    Dropdown.Hiding = not Bool
-    --
-    if Bool then
-        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
-        PreviewDropdown_5.Visible = true
-    end
-    --
-    Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
-    Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-        if not Bool then
-            Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
-            PreviewDropdown_5.Visible = false
-        end
-    end)
-
-    -- FORCE CLICKS TO WORK
-    Button_44.Active = Bool
-    DropdownOutline_5.Active = Bool
-    if Bool then
-        task.delay(Library.UI.TweenSpeed + 0.05, function()
-            if Button_44 then Button_44.Active = true end
-            if DropdownOutline_5 then DropdownOutline_5.Active = true end
-        end)
-    end
-end
+                local OldValues = Library.Objects[PreviewDropdown_5]
+                --
+                Dropdown.Hiding = not Bool
+                --
+                if Bool then
+                    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
+                end
+                --
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
+                Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
+                    if not Bool then
+                        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
+                    end
+                end)
+            end
             --
             function Dropdown:AddValue(Value)
                 local Item = {
@@ -3804,21 +3792,31 @@ end
             end
             --
             function Toggle:SetVisible(Bool)
-                local OldValues = Library.Objects[PreviewToggle]
-                --
-                Toggle.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
-                end
-                --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
-                Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
-                    end
-                end)
-            end
+    local OldValues = Library.Objects[PreviewToggle]
+    --
+    Toggle.Hiding = not Bool
+    --
+    if Bool then
+        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
+        PreviewToggle.Visible = true
+    end
+    --
+    Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+    Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
+        if not Bool then
+            Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
+            PreviewToggle.Visible = false
+        end
+    end)
+
+    -- FORCE CLICKS TO WORK
+    Button_9.Active = Bool
+    if Bool then
+        task.delay(Library.UI.TweenSpeed + 0.05, function()
+            if Button_9 then Button_9.Active = true end
+        end)
+    end
+end
             --
             function Toggle:ColorPicker(Options)
                 Options = Library:Validate({
