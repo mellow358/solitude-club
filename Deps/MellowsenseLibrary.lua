@@ -3797,7 +3797,7 @@ do -- Library
                 Toggle.Hiding = not Bool
                 --
                 if Bool then
-                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
+                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
                 end
                 --
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
