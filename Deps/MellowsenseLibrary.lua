@@ -3792,17 +3792,21 @@ do -- Library
             end
             --
             function Toggle:SetVisible(Bool)
-    local OldValues = Library.Objects[PreviewToggle]
-    Toggle.Hiding = not Bool
-    
-    -- Bbot style: Instant state update
-    PreviewToggle.Visible = Bool
-    PreviewToggle.Active = Bool
-    Button_9.Active = Bool
-    
-    
-    
-end
+                local OldValues = Library.Objects[PreviewToggle]
+                --
+                Toggle.Hiding = not Bool
+                --
+                if Bool then
+                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
+                end
+                --
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+                Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
+                    if not Bool then
+                        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
+                    end
+                end)
+            end
             --
             function Toggle:ColorPicker(Options)
                 Options = Library:Validate({
@@ -3875,33 +3879,28 @@ end
         end
         --
         do -- Connections
-            Library:Connection(PreviewToggle.MouseEnter, function()
-                if Library.UI.Faded then return end
-                --
-                Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
-            end)
-            --
-            Library:Connection(PreviewToggle.MouseLeave, function()
-                if Library.UI.Faded then return end
-                --
-                Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(227, 227, 227)})
-            end)
-            --
-            Library:Connection(Button_9.MouseButton1Click, function()
-                if Library.UI.Faded then return end
-                --
-                Toggle:ToggleGUI()
-            end)
+    Library:Connection(PreviewToggle.MouseEnter, function()
+        if Library.UI.Faded then return end
+        Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
+    end)
+    --
+    Library:Connection(PreviewToggle.MouseLeave, function()
+        if Library.UI.Faded then return end
+        Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(227, 227, 227)})
+    end)
+    --
+    -- MOBILE FIX: Attach to Text and Frame directly (supports Touch + Mouse)
+    local function OnToggleClick(input, gpe)
+        if gpe or Library.UI.Faded or Toggle.Hiding then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Toggle:ToggleGUI()
         end
-        --
-        Toggle:ToggleGUI(Options.Default)
-        --
-        if Options.Hidden then
-            Toggle:SetVisible(false)
-        end
-        --
-        return Toggle
     end
+
+    Library:Connection(ToggleName.InputBegan, OnToggleClick)
+    Library:Connection(PreviewToggle.InputBegan, OnToggleClick)
+    Library:Connection(Button_9.InputBegan, OnToggleClick)
+end
     --
     function Library:Label(Options)
         Options = Library:Validate({
