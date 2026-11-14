@@ -417,19 +417,18 @@ do -- Library
     --
     function Library:Fade(State, Table, MainUI, Speed)
         local IsMainUI = Table == Library.Objects
-        --
+    
         MainUI.Active = State
-        --
+    
         if State then
             MainUI.Visible = true
         end
-        --
+    
         if IsMainUI then
             Library.UI.Faded = not State
         end
-        --  handle toggle transparency when fading out since im not using fade out for now as it causes fps issues
+    
         if not State and IsMainUI then
-            -- find all toggle elements and force them transparent immediately instead of waiting since some things may not leave instantly
             for _, obj in pairs(MainUI:GetDescendants()) do
                 if obj.ClassName == "Frame" then
                     if obj.Name == "ToggleMain" then
@@ -438,49 +437,40 @@ do -- Library
                 end
             end
         end
-        --
+    
         for _, Object in Table do
-            if not Object[3] then
+            -- FIX: only skip when hiding. When showing, always restore, even if [3] is true,
+            -- because [3] gets set by SetVisible(true) before Fade runs.
+            if State or not Object[3] then
                 if Object[1].ClassName == "Frame" and (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
-                    -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                     Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                 elseif Object[1].ClassName == "ImageLabel" or Object[1].ClassName == "ImageButton" then
                     if (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
-                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                         Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                     end
-                    --
                     if (Object[2]["ImageTransparency"] or 0) ~= 1 then
-                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {ImageTransparency = State and (Object[2]["ImageTransparency"] or 0) or 1})
                         Object[1].ImageTransparency = State and (Object[2]["ImageTransparency"] or 0) or 1
                     end
                 elseif Object[1].ClassName == "TextLabel" or Object[1].ClassName == "TextButton" or Object[1].ClassName == "TextBox" then
                     if (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
-                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                         Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                     end
-                    --
                     if (Object[2]["TextTransparency"] or 0) ~= 1 then
-                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {TextTransparency = State and (Object[2]["TextTransparency"] or 0) or 1})
                         Object[1].TextTransparency = State and (Object[2]["TextTransparency"] or 0) or 1
                     end
                 elseif Object[1].ClassName == "ScrollingFrame" then
                     if (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
-                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1})
                         Object[1].BackgroundTransparency = State and (Object[2]["BackgroundTransparency"] or 0) or 1
                     end
-                    --
                     if (Object[2]["ScrollBarImageTransparency"] or 0) ~= 1 then
-                        -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {ScrollBarImageTransparency = State and (Object[2]["ScrollBarImageTransparency"] or 0) or 1})
                         Object[1].ScrollBarImageTransparency = State and (Object[2]["ScrollBarImageTransparency"] or 0) or 1
                     end
                 elseif Object[1].ClassName == "UIStroke" then
-                    -- Library:TweenObject(Object[1], TweenInfo.new(Speed, Enum.EasingStyle.Linear, State and Enum.EasingDirection["Out"] or Enum.EasingDirection["In"]), {Transparency = State and (Object[2]["Transparency"] or 0) or 1})
                     Object[1].Transparency = State and (Object[2]["Transparency"] or 0) or 1
                 end
             end
         end
-        --
+    
         if not State then
             task.delay(Speed, function()
                 if not MainUI.Parent then return end
@@ -1695,18 +1685,17 @@ do -- Library
         do -- Functions
             function Keybind:SetVisible(Bool)
                 local OldValues = Library.Objects[KeybindObject]
-                --
+            
                 Keybind.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(KeybindObject, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], false}
-                    end
+                    Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
@@ -2378,18 +2367,17 @@ do -- Library
             --
             function MultiBox:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewMultiBox_5]
-                --
+            
                 MultiBox.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(PreviewMultiBox_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], false}
-                    end
+                    Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
@@ -2690,7 +2678,11 @@ do -- Library
             MultiBox:SetVisible(false)
         end
         --
-        MultiBox:Toggle(true)
+        if not Options.Hiding then
+            MultiBox:Toggle(true)
+        else
+            MultiBox.Open = false
+        end
         --
         return MultiBox
     end
@@ -2894,18 +2886,17 @@ do -- Library
             --
             function Dropdown:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewDropdown_5]
-                --
+            
                 Dropdown.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
-                    end
+                    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
@@ -3153,7 +3144,11 @@ do -- Library
             Dropdown:SetVisible(false)
         end
         --
-        Dropdown:Toggle(true)
+        if not Options.Hiding then
+            Dropdown:Toggle(true)
+        else
+            Dropdown.Open = false
+        end
         --
         return Dropdown
     end
@@ -3452,19 +3447,18 @@ do -- Library
         --
         function Slider:SetVisible(Bool)
             local OldValues = Library.Objects[PreviewSlider]
-            --
+        
             Slider.Hiding = not Bool
             SliderValue.Visible = Bool
-            --
-            if Bool then
-                Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], true}
-            end
-            --
+        
+            Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], not Bool}
+        
             Library:Fade(Bool, Library:GetObjectsTable(PreviewSlider), PreviewSlider, 0.075)
+        
+            Library.UI.Resizing = true
             Library:TweenObject(PreviewSlider, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 7) or UDim2.new(1, 0, 0, 20)) or UDim2.new(1, 0, 0, -10)}, function()
-                if not Bool then
-                    Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], false}
-                end
+                Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], not Bool}
+                Library.UI.Resizing = false
             end)
         end
         --
@@ -3792,18 +3786,17 @@ do -- Library
             --
             function Toggle:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewToggle]
-                --
+            
                 Toggle.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
-                    end
+                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
@@ -3983,18 +3976,17 @@ do -- Library
             --
             function Label:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewLabel]
-                --
+            
                 Label.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewLabel), PreviewLabel, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(PreviewLabel, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], false}
-                    end
+                    Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
@@ -4188,19 +4180,18 @@ do -- Library
         do -- Functions
             function TextBox:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewTextBox]
-                --
+            
                 TextBox.Hiding = not Bool
                 TextBoxObject.Visible = Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewTextBox), PreviewTextBox, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(PreviewTextBox, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], false}
-                    end
+                    Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
@@ -4392,18 +4383,17 @@ do -- Library
             --
             function List:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewList]
-                --
+            
                 TextBox.Object.Visible = Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewList] = {PreviewList, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[PreviewList] = {PreviewList, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewList, false), PreviewList, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(PreviewList, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, Options.Size) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewList] = {PreviewList, OldValues[2], false}
-                    end
+                    Library.Objects[PreviewList] = {PreviewList, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
@@ -4768,18 +4758,17 @@ do -- Library
             --
             function Button:SetVisible(Bool)
                 local OldValues = Library.Objects[PreviewButton]
-                --
+            
                 Button.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], true}
-                end
-                --
+            
+                Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], not Bool}
+            
                 Library:Fade(Bool, Library:GetObjectsTable(PreviewButton), PreviewButton, 0.075)
+            
+                Library.UI.Resizing = true
                 Library:TweenObject(PreviewButton, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], false}
-                    end
+                    Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], not Bool}
+                    Library.UI.Resizing = false
                 end)
             end
             --
