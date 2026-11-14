@@ -756,9 +756,11 @@ do -- Library
         do -- Functions
             function ColorPicker:SetVisible(Bool)
                 ColorPickerOutline_1.Visible = Bool
-                --
                 if Bool == false then
-                    ColorPicker:RemoveFrame()
+                    ColorPicker:RemoveFrame(true)   -- was missing `true`; use fast destroy so state is clean
+                    ColorPicker.Active = false      -- was missing; leaves Active=true causing toggle invert
+                    ColorPicker.ActiveFrame = false -- same for keybind popup
+                    ColorPicker:RemoveOtherFrame(true)
                 end
             end
             --
@@ -1684,23 +1686,28 @@ do -- Library
         --
         do -- Functions
             function Keybind:SetVisible(Bool)
-                local OldValues = Library.Objects[KeybindObject]
-            
-                Keybind.Hiding = not Bool
-            
-                Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
-            
-                Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075)
-            
-                Library.UI.Resizing = true
-                Library:TweenObject(KeybindObject, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
-                end)
-            end
+    local OldValues = Library.Objects[KeybindObject]
+
+    Keybind.Hiding = not Bool
+
+    Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
+
+    -- Force-close the mode-picker popup so it doesn't orphan on ScreenGUI when hidden.
+    if Bool == false then
+        Keybind.ActiveFrame = false
+        Keybind:RemoveFrame(true)
+    end
+
+    Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075)
+
+    Library.UI.Resizing = true
+    Library:TweenObject(KeybindObject, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
+        Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], not Bool}
+        Library.UI.Resizing = false
+    end)
+end
             --
             function Keybind:Set(Key)
-                if Keybind.Hiding then return end
                 if typeof(Key) == "boolean" then return end
                 --
                 if typeof(Key) == "EnumItem" then
@@ -1753,7 +1760,6 @@ do -- Library
             end
             --
             function Keybind:Toggle(Bool)
-                if Keybind.Hiding then return end
                 --
                 if Bool == nil then
                     Keybind.State = not Keybind.State
@@ -2366,20 +2372,29 @@ do -- Library
             end
             --
             function MultiBox:SetVisible(Bool)
-                local OldValues = Library.Objects[PreviewMultiBox_5]
-            
-                MultiBox.Hiding = not Bool
-            
-                Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
-            
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075)
-            
-                Library.UI.Resizing = true
-                Library:TweenObject(PreviewMultiBox_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
-                end)
-            end
+    local OldValues = Library.Objects[PreviewMultiBox_5]
+
+    MultiBox.Hiding = not Bool
+
+    Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
+
+    -- Force-close the popup so it doesn't orphan on ScreenGUI when hidden.
+    if Bool == false then
+        if MultiBox.Open then
+            MultiBox.Open = false
+            Library:Fade(false, Library:GetObjectsTable(MultiBoxMainOutline, true), MultiBoxMainOutline, 0)
+            MultiBoxMainOutline.Visible = false
+        end
+    end
+
+    Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075)
+
+    Library.UI.Resizing = true
+    Library:TweenObject(PreviewMultiBox_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
+        Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], not Bool}
+        Library.UI.Resizing = false
+    end)
+end
             --
             function MultiBox:AddValue(Value)
                 local Item = {
@@ -2514,8 +2529,6 @@ do -- Library
                 --
                 do -- Connections
                     Library:Connection(Button_4.MouseButton1Click, function()
-                        if MultiBox.Hiding then return end
-                        --
                         Item:Toggle()
                     end)
                     --
@@ -2642,8 +2655,6 @@ do -- Library
         --
         do -- Connections
             Library:Connection(Button_44.MouseButton1Click, function()
-                if MultiBox.Hiding then return end
-                --
                 MultiBox:Toggle()
             end)
             --
@@ -2885,20 +2896,29 @@ do -- Library
             end
             --
             function Dropdown:SetVisible(Bool)
-                local OldValues = Library.Objects[PreviewDropdown_5]
-            
-                Dropdown.Hiding = not Bool
-            
-                Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
-            
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
-            
-                Library.UI.Resizing = true
-                Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
-                end)
-            end
+    local OldValues = Library.Objects[PreviewDropdown_5]
+
+    Dropdown.Hiding = not Bool
+
+    Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
+
+    -- Force-close the popup so it doesn't orphan on ScreenGUI when hidden.
+    if Bool == false then
+        if Dropdown.Open then
+            Dropdown.Open = false
+            Library:Fade(false, Library:GetObjectsTable(DropdownMainOutline, true), DropdownMainOutline, 0)
+            DropdownMainOutline.Visible = false
+        end
+    end
+
+    Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
+
+    Library.UI.Resizing = true
+    Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
+        Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], not Bool}
+        Library.UI.Resizing = false
+    end)
+end
             --
             function Dropdown:AddValue(Value)
                 local Item = {
@@ -2984,8 +3004,6 @@ do -- Library
                 --
                 do -- Connections
                     Library:Connection(Button_4.MouseButton1Click, function()
-                        if Dropdown.Hiding then return end
-                        --
                         Item:Activate()
                         Dropdown:Toggle()
                     end)
@@ -3110,8 +3128,6 @@ do -- Library
         --
         do -- Connections
             Library:Connection(Button_44.MouseButton1Click, function()
-                if Dropdown.Hiding then return end
-                --
                 Dropdown:Toggle()
             end)
             --
@@ -3390,7 +3406,7 @@ do -- Library
         end
         --
         local function SetValue(Value, IgnoreLimit)
-            if (not Value) or Slider.Hiding then return end
+            if (not Value) then return end
             --
             local OriginalValue = Value
             -- check if we should allow values beyond the max
@@ -3732,24 +3748,25 @@ do -- Library
         --
         do -- Functions
             function Toggle:ToggleGUI(Bool)
-                if Bool == nil then
-                    Toggle.State = not Toggle.State
-                else
-                    Toggle.State = Bool
-                end
-                --
-                Library:TweenObject(ToggleMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = Toggle.State and 0 or 1})
-                
-                -- update the stored transparency value in the objects table, this is for the temp fix for the toggle out and toggle in 
-                -- since this uses instant out and instant in instead of the normal fade in and fade out
-                if Library.Objects[ToggleMain] then
-                    Library.Objects[ToggleMain][2].BackgroundTransparency = Toggle.State and 0 or 1
-                end
-                
-                --
-                Library.Flags[Options.Flag] = Toggle
-                Options.Callback(Toggle.State)
-            end
+    if Bool == nil then
+        Toggle.State = not Toggle.State
+    else
+        Toggle.State = Bool
+    end
+    --
+    Library:TweenObject(ToggleMain, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundTransparency = Toggle.State and 0 or 1})
+    
+    -- Only update the stored base transparency when the element is NOT hidden.
+    -- If we overwrite it while hidden, the Fade(true, ...) on unhide will restore
+    -- the wrong transparency and the toggle will visually desync from its state.
+    if Library.Objects[ToggleMain] and not Toggle.Hiding then
+        Library.Objects[ToggleMain][2].BackgroundTransparency = Toggle.State and 0 or 1
+    end
+    
+    --
+    Library.Flags[Options.Flag] = Toggle
+    Options.Callback(Toggle.State)
+end
             --
             function Toggle:GetName()
                 return Options.Name
@@ -3785,20 +3802,26 @@ do -- Library
             end
             --
             function Toggle:SetVisible(Bool)
-                local OldValues = Library.Objects[PreviewToggle]
-            
-                Toggle.Hiding = not Bool
-            
-                Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
-            
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
-            
-                Library.UI.Resizing = true
-                Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
-                    Library.UI.Resizing = false
-                end)
-            end
+    local OldValues = Library.Objects[PreviewToggle]
+
+    Toggle.Hiding = not Bool
+
+    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
+
+    -- Restore ToggleMain's base transparency to match the current state so unhide
+    -- fades in with the correct on/off visual instead of whatever was cached last.
+    if Library.Objects[ToggleMain] then
+        Library.Objects[ToggleMain][2].BackgroundTransparency = Toggle.State and 0 or 1
+    end
+
+    Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+
+    Library.UI.Resizing = true
+    Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
+        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], not Bool}
+        Library.UI.Resizing = false
+    end)
+end
             --
             function Toggle:ColorPicker(Options)
                 Options = Library:Validate({
@@ -3885,8 +3908,6 @@ do -- Library
             --
             Library:Connection(Button_9.MouseButton1Click, function()
                 if Library.UI.Faded then return end
-                --
-                if Toggle.Hiding then return end
                 --
                 Toggle:ToggleGUI()
             end)
@@ -4218,12 +4239,6 @@ do -- Library
             --
             Library:Connection(TextBoxObject.Focused, function()
                 if Library.UI.Faded then return end
-                --
-                if TextBox.Hiding then
-                    TextBoxObject:ReleaseFocus()
-                    --
-                    return
-                end
                 --
                 TextBox.Focused = true
                 --
@@ -4811,8 +4826,6 @@ do -- Library
         do -- Connections
             Library:Connection(Button_6.MouseButton1Down, function()
                 if Library.UI.Faded then return end
-                --
-                if Button.Hiding then return end
                 --
                 Library:TweenObject(ButtonMain_1, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(180, 180, 180)})
                 --
