@@ -3795,7 +3795,7 @@ do -- Library
     local OldValues = Library.Objects[PreviewToggle]
     Toggle.Hiding = not Bool
     
-    -- Force the visual state immediately (juju style)
+    -- Bbot style: Instant state update
     PreviewToggle.Visible = Bool
     PreviewToggle.Active = Bool
     Button_9.Active = Bool
@@ -3808,7 +3808,7 @@ do -- Library
         PreviewToggle.Size = UDim2.new(1, 0, 0, 0)
     end
     
-    -- Fade visually, but do NOT let it tween the Size
+    -- Just fade the transparency, don't tween the size
     Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
 end
             --
@@ -3897,8 +3897,6 @@ end
             --
             Library:Connection(Button_9.MouseButton1Click, function()
                 if Library.UI.Faded then return end
-                --
-                if Toggle.Hiding then return end
                 --
                 Toggle:ToggleGUI()
             end)
