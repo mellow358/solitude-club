@@ -3156,8 +3156,6 @@ do -- Library
             Dropdown:SetVisible(false)
         end
         --
-        Dropdown:Toggle(true)
-        --
         return Dropdown
     end
     --
