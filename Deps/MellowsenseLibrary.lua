@@ -3901,6 +3901,15 @@ do -- Library
     Library:Connection(PreviewToggle.InputBegan, OnToggleClick)
     Library:Connection(Button_9.InputBegan, OnToggleClick)
 end
+        --
+        Toggle:ToggleGUI(Options.Default)
+        --
+        if Options.Hidden then
+            Toggle:SetVisible(false)
+        end
+        --
+        return Toggle
+    end
     --
     function Library:Label(Options)
         Options = Library:Validate({
