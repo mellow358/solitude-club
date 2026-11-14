@@ -3792,21 +3792,25 @@ do -- Library
             end
             --
             function Toggle:SetVisible(Bool)
-                local OldValues = Library.Objects[PreviewToggle]
-                --
-                Toggle.Hiding = not Bool
-                --
-                if Bool then
-                    Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
-                end
-                --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
-                Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
-                    if not Bool then
-                        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
-                    end
-                end)
-            end
+    local OldValues = Library.Objects[PreviewToggle]
+    Toggle.Hiding = not Bool
+    
+    -- Force the visual state immediately (juju style)
+    PreviewToggle.Visible = Bool
+    PreviewToggle.Active = Bool
+    Button_9.Active = Bool
+    
+    if Bool then
+        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
+        PreviewToggle.Size = UDim2.new(1, 0, 0, 8)
+    else
+        Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
+        PreviewToggle.Size = UDim2.new(1, 0, 0, 0)
+    end
+    
+    -- Fade visually, but do NOT let it tween the Size
+    Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+end
             --
             function Toggle:ColorPicker(Options)
                 Options = Library:Validate({
