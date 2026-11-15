@@ -4897,7 +4897,7 @@ do -- Library
     function Library:Window(Options)
         Options = Library:Validate({
             Name = "solitude.club",
-            Size = IsMobile and UDim2.new(0, 612, 0, 600) or UDim2.new(0, 700, 0, 612),
+            Size = IsMobile and UDim2.new(0, 612, 0, 612) or UDim2.new(0, 700, 0, 612),
             MinResize = UDim2.new(0, 600, 0, 500),
             MaxResize = UDim2.new(0, 10000, 0, 10000),
             CloseBind = Enum.KeyCode.Insert,
