@@ -5405,11 +5405,17 @@ arcane.List = function(p219, p220)
 
 		local iconImage = nil
 		local textDefaultX = 12
-		local textSelectedX = 24
+		local textSelectedX = 20 -- Text moves 8px to clear the line at x=12
+		local iconDefaultSize = UDim2.new(0, 14, 0, 14)
+		local iconBaseX = 20     -- Icon starts at x=20 (after the line)
 
 		if p223 and p223.Image then
-			local iconPos  = p223.Position or UDim2.new(0, 10, 0.5, 0)
-			local iconSize = p223.Size     or UDim2.new(0, 14, 0, 14)
+			iconBaseX = (p223.Position and p223.Position.X.Offset) or 20
+			iconDefaultSize = p223.Size or iconDefaultSize
+			
+			-- Text must start after the icon + a 6px gap
+			textDefaultX = iconBaseX + iconDefaultSize.X.Offset + 6
+			textSelectedX = textDefaultX -- Keep text static if there's an icon so it doesn't smash into it
 
 			iconImage = arcane:Create("ImageLabel", {
 				Parent = v483.Instance,
@@ -5417,17 +5423,13 @@ arcane.List = function(p219, p220)
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				AnchorPoint = Vector2.new(0, 0.5),
-				Position = iconPos,
-				Size = iconSize,
+				Position = UDim2.new(0, iconBaseX, 0.5, 0),
+				Size = iconDefaultSize,
 				Image = p223.Image,
 				ImageColor3 = p223.Color or arcane.Theme.DimText,
 				ZIndex = 4
 			})
 
-			-- Calculate text position dynamically based on icon position + size + 6px padding
-			textDefaultX = iconPos.X.Offset + iconSize.X.Offset + 6
-			textSelectedX = textDefaultX -- Keep text static when selected so it doesn't overlap
-			
 			v486.Instance.Position = UDim2.new(0, textDefaultX, 0, 0)
 			v486.Instance.Size = UDim2.new(1, -textDefaultX - 8, 1, 0)
 		end
@@ -5452,14 +5454,18 @@ arcane.List = function(p219, p220)
 						Position = UDim2.new(0, textSelectedX, 0, 0)
 					})
 					
-					-- Slide the line to x=12. If an icon exists, the text stays far enough right.
+					-- Slide line to x=12.
 					v485:Tween({
 						BackgroundTransparency = 0,
 						Position = UDim2.new(0, 12, 0.5, 0)
 					})
 
 					if iconImage then
-						iconImage.ImageColor3 = arcane.Theme.Accent
+						-- Make icon "bold": pure white + slightly larger
+						iconImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
+						iconImage:Tween({
+							Size = UDim2.new(0, iconDefaultSize.X.Offset + 2, 0, iconDefaultSize.Y.Offset + 2)
+						})
 					end
 				else
 					v486:ChangeItemTheme({ TextColor3 = "DimText" })
@@ -5477,6 +5483,9 @@ arcane.List = function(p219, p220)
 
 					if iconImage then
 						iconImage.ImageColor3 = p223.Color or arcane.Theme.DimText
+						iconImage:Tween({
+							Size = iconDefaultSize
+						})
 					end
 				end
 			end
