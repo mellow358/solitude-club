@@ -317,6 +317,18 @@ do -- Library
         return Table2
     end
     --
+    function Library:UpdateConfigList(List, Type)
+        for _, File in listfiles("gamesense/Configs") do
+            local FileName = File:gsub("\\", "/"):gsub("gamesense/Configs/", ""):gsub(".cfg", "")
+            --
+            if Type == "Remove" then
+                List:RemoveValue(FileName)
+            else
+                List:AddValue(FileName)
+            end
+        end
+    end
+    --
     function Library:GetObjectsTable(MainUI, AddMain, Ignored)
         local AddMain = AddMain or false
         local Ignored = Ignored or {}
