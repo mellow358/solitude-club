@@ -1706,14 +1706,16 @@ arcane.Tooltip = function(p99, p100)
 end
 arcane.Window = function(p102, p103)
 	local v232 = p103 or {}
-	local t15 = {
-		Name = v232.Name or v232.name or "ARCANE",
-		User = v232.User or v232.user or LocalPlayer.Name,
-		Logo = v232.Logo or v232.logo or "72939878637463",
-		IsOpen = true,
-		Pages = {},
-		Items = {}
-	}
+local t15 = {
+    Name = v232.Name or v232.name or "ARCANE",
+    Title = v232.Title or v232.title or v232.Name or v232.name or "ARCANE",
+    Suffix = v232.Suffix or v232.suffix or "",
+    User = v232.User or v232.user or LocalPlayer.Name,
+    Logo = v232.Logo or v232.logo or "72939878637463",
+    IsOpen = true,
+    Pages = {},
+    Items = {}
+}
 	local screenScale = arcane:GetScreenScale()
 	local ViewportSize = workspace.CurrentCamera.ViewportSize
 	local items = {
@@ -1769,20 +1771,46 @@ arcane.Window = function(p102, p103)
 	})
 	v25(items.Logo.Instance, t15.Logo)
 	items.HubName = arcane:Create("TextLabel", {
-		Parent = items.TopBar.Instance,
-		Name = "\0",
-		FontFace = arcane.Font,
-		TextColor3 = arcane.Theme.Accent,
-		Text = t15.Name,
-		TextSize = 16,
-		BackgroundTransparency = 1,
-		Position = UDim2.new(0, 46, 0, 0),
-		Size = UDim2.new(0, 200, 1, 0),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		BorderSizePixel = 0
-	}):AddToTheme({
-		TextColor3 = "Accent"
-	})
+    Parent = items.TopBar.Instance,
+    Name = "\0",
+    FontFace = arcane.Font,
+    TextColor3 = arcane.Theme.Text,
+    Text = t15.Title,
+    TextSize = 16,
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 46, 0, 0),
+    Size = UDim2.new(0, 100, 1, 0),
+    TextXAlignment = Enum.TextXAlignment.Left,
+    BorderSizePixel = 0
+}):AddToTheme({
+    TextColor3 = "Text"
+})
+
+items.HubSuffix = arcane:Create("TextLabel", {
+    Parent = items.TopBar.Instance,
+    Name = "\0",
+    FontFace = arcane.Font,
+    TextColor3 = arcane.Theme.Accent,
+    Text = t15.Suffix,
+    TextSize = 16,
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 46, 0, 0),
+    Size = UDim2.new(0, 100, 1, 0),
+    TextXAlignment = Enum.TextXAlignment.Left,
+    BorderSizePixel = 0
+}):AddToTheme({
+    TextColor3 = "Accent"
+})
+
+task.defer(function()
+    local titleWidth = items.HubName.Instance.TextBounds.X + 4
+    items.HubSuffix.Instance.Position = UDim2.new(0, 46 + titleWidth, 0, 0)
+end)
+
+arcane:Connect(items.HubName.Instance:GetPropertyChangedSignal("TextBounds"), function()
+    local titleWidth = items.HubName.Instance.TextBounds.X + 4
+    items.HubSuffix.Instance.Position = UDim2.new(0, 46 + titleWidth, 0, 0)
+end)
 	items.User = arcane:Create("TextLabel", {
 		Parent = items.TopBar.Instance,
 		Name = "\0",
