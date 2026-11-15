@@ -105,7 +105,7 @@ local t1 = {
 		Topbar = Color3.fromRGB(22, 22, 26),
 		Section = Color3.fromRGB(21, 20, 25),
 		Element = Color3.fromRGB(27, 26, 33),
-		Accent = Color3.fromRGB(254, 0, 67),
+		Accent = Color3.fromRGB(158, 188, 242),
 		Text = Color3.fromRGB(255, 255, 255),
 		DimText = Color3.fromRGB(120, 120, 130),
 		Border = Color3.fromRGB(30, 29, 34),
@@ -117,7 +117,7 @@ local t1 = {
 		Topbar = Color3.fromRGB(235, 235, 240),
 		Section = Color3.fromRGB(245, 245, 249),
 		Element = Color3.fromRGB(230, 230, 236),
-		Accent = Color3.fromRGB(254, 0, 67),
+		Accent = Color3.fromRGB(158, 188, 242),
 		Text = Color3.fromRGB(24, 24, 30),
 		DimText = Color3.fromRGB(140, 140, 150),
 		Border = Color3.fromRGB(205, 205, 214),
@@ -1770,47 +1770,61 @@ local t15 = {
 		BorderSizePixel = 0
 	})
 	v25(items.Logo.Instance, t15.Logo)
-	items.HubName = arcane:Create("TextLabel", {
+	-- Create a container that automatically sizes to fit its children
+items.TitleHolder = arcane:Create("Frame", {
     Parent = items.TopBar.Instance,
+    Name = "\0",
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 46, 0, 0),
+    Size = UDim2.new(0, 0, 1, 0),
+    AutomaticSize = Enum.AutomaticSize.X,
+    BorderSizePixel = 0
+})
+
+-- Layout makes them sit perfectly side-by-side
+arcane:Create("UIListLayout", {
+    Parent = items.TitleHolder.Instance,
+    FillDirection = Enum.FillDirection.Horizontal,
+    VerticalAlignment = Enum.VerticalAlignment.Center,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Padding = UDim.new(0, 2) -- 2 pixels of perfect spacing
+})
+
+-- Title (solitude) - White
+items.HubName = arcane:Create("TextLabel", {
+    Parent = items.TitleHolder.Instance,
     Name = "\0",
     FontFace = arcane.Font,
     TextColor3 = arcane.Theme.Text,
     Text = t15.Title,
     TextSize = 16,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 46, 0, 0),
-    Size = UDim2.new(0, 100, 1, 0),
+    Size = UDim2.new(0, 0, 0, 18), -- Height 18 so it doesn't jitter
+    AutomaticSize = Enum.AutomaticSize.X,
+    LayoutOrder = 1,
     TextXAlignment = Enum.TextXAlignment.Left,
     BorderSizePixel = 0
 }):AddToTheme({
     TextColor3 = "Text"
 })
 
+-- Suffix (.club) - Accent
 items.HubSuffix = arcane:Create("TextLabel", {
-    Parent = items.TopBar.Instance,
+    Parent = items.TitleHolder.Instance,
     Name = "\0",
     FontFace = arcane.Font,
     TextColor3 = arcane.Theme.Accent,
     Text = t15.Suffix,
     TextSize = 16,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 46, 0, 0),
-    Size = UDim2.new(0, 100, 1, 0),
+    Size = UDim2.new(0, 0, 0, 18),
+    AutomaticSize = Enum.AutomaticSize.X,
+    LayoutOrder = 2,
     TextXAlignment = Enum.TextXAlignment.Left,
     BorderSizePixel = 0
 }):AddToTheme({
     TextColor3 = "Accent"
 })
-
-task.defer(function()
-    local titleWidth = items.HubName.Instance.TextBounds.X + 4
-    items.HubSuffix.Instance.Position = UDim2.new(0, 46 + titleWidth, 0, 0)
-end)
-
-arcane:Connect(items.HubName.Instance:GetPropertyChangedSignal("TextBounds"), function()
-    local titleWidth = items.HubName.Instance.TextBounds.X + 4
-    items.HubSuffix.Instance.Position = UDim2.new(0, 46 + titleWidth, 0, 0)
-end)
 	items.User = arcane:Create("TextLabel", {
 		Parent = items.TopBar.Instance,
 		Name = "\0",
