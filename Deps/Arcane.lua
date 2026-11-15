@@ -1770,61 +1770,63 @@ local t15 = {
 		BorderSizePixel = 0
 	})
 	v25(items.Logo.Instance, t15.Logo)
+	
 	-- Create a container that automatically sizes to fit its children
-items.TitleHolder = arcane:Create("Frame", {
-    Parent = items.TopBar.Instance,
-    Name = "\0",
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 46, 0, 0),
-    Size = UDim2.new(0, 0, 1, 0),
-    AutomaticSize = Enum.AutomaticSize.X,
-    BorderSizePixel = 0
-})
-
--- The magic math from NewLibrary: List layout does the positioning perfectly
-arcane:Create("UIListLayout", {
-    Parent = items.TitleHolder.Instance,
-    FillDirection = Enum.FillDirection.Horizontal,
-    VerticalAlignment = Enum.VerticalAlignment.Center,
-    SortOrder = Enum.SortOrder.LayoutOrder,
-    Padding = UDim.new(0, 0) -- No gap, text touches naturally
-})
-
--- Title (solitude) - White
-items.HubName = arcane:Create("TextLabel", {
-    Parent = items.TitleHolder.Instance,
-    Name = "\0",
-    FontFace = arcane.Font,
-    TextColor3 = arcane.Theme.Text, -- White
-    Text = t15.Title,
-    TextSize = 16,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(0, 0, 0, 18),
-    AutomaticSize = Enum.AutomaticSize.X,
-    LayoutOrder = 1,
-    TextXAlignment = Enum.TextXAlignment.Right,
-    BorderSizePixel = 0
-}):AddToTheme({
-    TextColor3 = "Text"
-})
-
--- Suffix (.club) - Accent
-items.HubSuffix = arcane:Create("TextLabel", {
-    Parent = items.TitleHolder.Instance,
-    Name = "\0",
-    FontFace = arcane.Font,
-    TextColor3 = arcane.Theme.Accent, -- Accent (Blue)
-    Text = t15.Suffix,
-    TextSize = 16,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(0, 0, 0, 18),
-    AutomaticSize = Enum.AutomaticSize.X,
-    LayoutOrder = 2,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    BorderSizePixel = 0
-}):AddToTheme({
-    TextColor3 = "Accent"
-})
+    items.TitleHolder = arcane:Create("Frame", {
+        Parent = items.TopBar.Instance,
+        Name = "\0",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 46, 0, 0),
+        Size = UDim2.new(0, 0, 1, 0),
+        AutomaticSize = Enum.AutomaticSize.X,
+        BorderSizePixel = 0
+    })
+    
+    -- The magic math from NewLibrary: List layout does the positioning perfectly
+    arcane:Create("UIListLayout", {
+        Parent = items.TitleHolder.Instance,
+        FillDirection = Enum.FillDirection.Horizontal,
+        VerticalAlignment = Enum.VerticalAlignment.Center,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 0) -- No gap, text touches naturally
+    })
+    
+    -- Title (solitude) - White
+    items.HubName = arcane:Create("TextLabel", {
+        Parent = items.TitleHolder.Instance,
+        Name = "\0",
+        FontFace = arcane.Font,
+        TextColor3 = arcane.Theme.Text, -- White
+        Text = t15.Title,
+        TextSize = 16,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 0, 0, 18),
+        AutomaticSize = Enum.AutomaticSize.X,
+        LayoutOrder = 1,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        BorderSizePixel = 0
+    }):AddToTheme({
+        TextColor3 = "Text"
+    })
+    
+    -- Suffix (.club) - Accent
+    items.HubSuffix = arcane:Create("TextLabel", {
+        Parent = items.TitleHolder.Instance,
+        Name = "\0",
+        FontFace = arcane.Font,
+        TextColor3 = arcane.Theme.Accent, -- Accent (Blue)
+        Text = t15.Suffix,
+        TextSize = 16,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 0, 0, 18),
+        AutomaticSize = Enum.AutomaticSize.X,
+        LayoutOrder = 2,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BorderSizePixel = 0
+    }):AddToTheme({
+        TextColor3 = "Accent"
+    })
+	
 	items.User = arcane:Create("TextLabel", {
 		Parent = items.TopBar.Instance,
 		Name = "\0",
@@ -5243,8 +5245,7 @@ arcane.List = function(p219, p220)
 	local Empty = v478.Empty or v478.empty
 
 	t37.Empty = Empty or "It's still empty here"
-	t37.Callback = v478.Callback or v478.callback or function()
-	end
+	t37.Callback = v478.Callback or v478.callback or function() end
 	t37.Tooltip = v478.Tooltip or v478.tooltip
 	t37.Value = nil
 	t37.OptionData = {}
@@ -5341,9 +5342,6 @@ arcane.List = function(p219, p220)
 	end
 
 	t37.AddOption = function(p221, p222, p223)
-		-- p222 = option name (string)
-		-- p223 = icon table { Image, Color, Size, Position } (optional)
-
 		local v483 = arcane:Create("Frame", {
 			Parent = items.Scroll.Instance,
 			Name = "\0",
@@ -5365,6 +5363,7 @@ arcane.List = function(p219, p220)
 			ZIndex = 3,
 			BorderSizePixel = 0
 		})
+		
 		local v485 = arcane:Create("Frame", {
 			Parent = v483.Instance,
 			Name = "\0",
@@ -5372,7 +5371,7 @@ arcane.List = function(p219, p220)
 			Position = UDim2.new(0, 6, 0.5, 0),
 			Size = UDim2.new(0, 3, 0, 14),
 			BackgroundTransparency = 1,
-			ZIndex = 3,
+			ZIndex = 4,
 			BorderSizePixel = 0,
 			BackgroundColor3 = arcane.Theme.Accent
 		}):AddToTheme({
@@ -5396,7 +5395,7 @@ arcane.List = function(p219, p220)
 			Size = UDim2.new(1, -20, 1, 0),
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextTruncate = Enum.TextTruncate.AtEnd,
-			ZIndex = 3,
+			ZIndex = 4,
 			BorderSizePixel = 0
 		}):AddToTheme({
 			TextColor3 = "DimText"
@@ -5404,15 +5403,12 @@ arcane.List = function(p219, p220)
 
 		arcane:RegisterText(v486.Instance, p222)
 
-		-- ================================================================
-		-- ICON SUPPORT: inject ImageLabel and shift text accordingly
-		-- ================================================================
 		local iconImage = nil
-		local iconOffsetX = 12          -- default text X (no icon)
-		local iconOriginalColor = nil
+		local textDefaultX = 12
+		local textSelectedX = 24
 
 		if p223 and p223.Image then
-			local iconPos  = p223.Position or UDim2.new(0, 6, 0.5, 0)
+			local iconPos  = p223.Position or UDim2.new(0, 10, 0.5, 0)
 			local iconSize = p223.Size     or UDim2.new(0, 14, 0, 14)
 
 			iconImage = arcane:Create("ImageLabel", {
@@ -5425,15 +5421,15 @@ arcane.List = function(p219, p220)
 				Size = iconSize,
 				Image = p223.Image,
 				ImageColor3 = p223.Color or arcane.Theme.DimText,
-				ZIndex = 3
+				ZIndex = 4
 			})
 
-			iconOriginalColor = p223.Color or arcane.Theme.DimText
-
-			-- Shift text label to the right of the icon
-			iconOffsetX = iconPos.X.Offset + iconSize.X.Offset + 8
-			v486.Instance.Position = UDim2.new(0, iconOffsetX, 0, 0)
-			v486.Instance.Size     = UDim2.new(1, -iconOffsetX - 8, 1, 0)
+			-- Calculate text position dynamically based on icon position + size + 6px padding
+			textDefaultX = iconPos.X.Offset + iconSize.X.Offset + 6
+			textSelectedX = textDefaultX -- Keep text static when selected so it doesn't overlap
+			
+			v486.Instance.Position = UDim2.new(0, textDefaultX, 0, 0)
+			v486.Instance.Size = UDim2.new(1, -textDefaultX - 8, 1, 0)
 		end
 
 		local t38
@@ -5444,22 +5440,19 @@ arcane.List = function(p219, p220)
 			Row = v483,
 			Text = v486,
 			Line = v485,
-			Icon = iconImage,   -- expose so callers can tweak it
-			Toggle = function(p223_, p224)
-				-- NOTE: keep original signature names intact; p223_ shadows outer param name
+			Icon = iconImage,
+			Toggle = function(_, p224)
 				t38.Selected = p224
 
 				if p224 then
-					v486:ChangeItemTheme({
-						TextColor3 = "Text"
-					})
-					v483:Tween({
-						BackgroundTransparency = 0
-					})
+					v486:ChangeItemTheme({ TextColor3 = "Text" })
+					v483:Tween({ BackgroundTransparency = 0 })
 					v486:Tween({
 						TextColor3 = arcane.Theme.Text,
-						Position = UDim2.new(0, iconImage and iconOffsetX or 24, 0, 0)
+						Position = UDim2.new(0, textSelectedX, 0, 0)
 					})
+					
+					-- Slide the line to x=12. If an icon exists, the text stays far enough right.
 					v485:Tween({
 						BackgroundTransparency = 0,
 						Position = UDim2.new(0, 12, 0.5, 0)
@@ -5467,45 +5460,41 @@ arcane.List = function(p219, p220)
 
 					if iconImage then
 						iconImage.ImageColor3 = arcane.Theme.Accent
-						iconImage.Position   = UDim2.new(0, 6, 0.5, 0)
 					end
 				else
-					v486:ChangeItemTheme({
-						TextColor3 = "DimText"
-					})
-					v483:Tween({
-						BackgroundTransparency = 1
-					})
+					v486:ChangeItemTheme({ TextColor3 = "DimText" })
+					v483:Tween({ BackgroundTransparency = 1 })
+					
 					v486:Tween({
 						TextColor3 = arcane.Theme.DimText,
-						Position = UDim2.new(0, iconImage and iconOffsetX or 12, 0, 0)
+						Position = UDim2.new(0, textDefaultX, 0, 0)
 					})
+					
 					v485:Tween({
 						BackgroundTransparency = 1,
 						Position = UDim2.new(0, 6, 0.5, 0)
 					})
 
 					if iconImage then
-						iconImage.ImageColor3 = iconOriginalColor
-						iconImage.Position   = UDim2.new(0, 6, 0.5, 0)
+						iconImage.ImageColor3 = p223.Color or arcane.Theme.DimText
 					end
 				end
 			end
 		}
+		
 		tween2:Connect("MouseButton1Down", function()
 			if t38.Selected then
 				t37.Value = nil
 				t38:Toggle(false)
 			else
 				t37.Value = p222
-
 				for _, v in t37.Order, nil, nil do
 					v:Toggle(v == t38)
 				end
 			end
-
 			arcane:SafeCall(t37.Callback, t37.Value)
 		end)
+		
 		t38:Toggle(false)
 		t37.OptionData[p222] = t38
 		table.insert(t37.Order, t38)
@@ -5513,68 +5502,47 @@ arcane.List = function(p219, p220)
 
 		return t38
 	end
+	
 	t37.RemoveOption = function(p225, p226)
 		local v490 = t37.OptionData[p226]
-
 		if v490 then
 			local v491 = table.find(t37.Order, v490)
-
-			if v491 then
-				table.remove(t37.Order, v491)
-			end
-
+			if v491 then table.remove(t37.Order, v491) end
 			v490.Row.Instance:Destroy()
 			t37.OptionData[p226] = nil
-
-			if t37.Value == p226 then
-				t37.Value = nil
-			end
-
+			if t37.Value == p226 then t37.Value = nil end
 			v482()
 		end
 	end
+	
 	t37.Refresh = function(p227, p228)
 		for k in t37.OptionData, nil, nil do
 			t37:RemoveOption(k)
 		end
-
 		for _, v in p228, nil, nil do
-			-- support both plain strings and { name, iconTable } entries
-			if type(v) == "table" then
-				t37:AddOption(v[1], v[2])
-			else
-				t37:AddOption(v)
-			end
+			if type(v) == "table" then t37:AddOption(v[1], v[2])
+			else t37:AddOption(v) end
 		end
-
 		v482()
 	end
+	
 	t37.Set = function(p229, p230)
-		if not t37.OptionData[p230] then
-			return
-		end
-
+		if not t37.OptionData[p230] then return end
 		t37.Value = p230
-
 		for _, v in t37.Order, nil, nil do
 			v:Toggle(v.Name == p230)
 		end
-
 		arcane:SafeCall(t37.Callback, t37.Value)
 	end
+	
 	t37.Get = function()
 		return t37.Value
 	end
 
 	local Items = v478.Items or v478.items or {}
-
 	for _, v in Items, nil, nil do
-		-- support both plain strings and { name, iconTable } entries
-		if type(v) == "table" then
-			t37:AddOption(v[1], v[2])
-		else
-			t37:AddOption(v)
-		end
+		if type(v) == "table" then t37:AddOption(v[1], v[2])
+		else t37:AddOption(v) end
 	end
 
 	v482()
