@@ -1712,7 +1712,7 @@ do -- Library
                     Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075, false)
                 Library:TweenObject(KeybindObject, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], false}
@@ -2395,7 +2395,7 @@ do -- Library
                     Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075, false)
                 Library:TweenObject(PreviewMultiBox_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], false}
@@ -3468,7 +3468,7 @@ do -- Library
                 Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], true}
             end
             --
-            Library:Fade(Bool, Library:GetObjectsTable(PreviewSlider), PreviewSlider, 0.075)
+            Library:Fade(Bool, Library:GetObjectsTable(PreviewSlider), PreviewSlider, 0.075, false)
             Library:TweenObject(PreviewSlider, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 7) or UDim2.new(1, 0, 0, 20)) or UDim2.new(1, 0, 0, -10)}, function()
                 if not Bool then
                     Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], false}
@@ -3998,7 +3998,7 @@ do -- Library
                     Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewLabel), PreviewLabel, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewLabel), PreviewLabel, 0.075, false)
                 Library:TweenObject(PreviewLabel, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], false}
@@ -4204,7 +4204,7 @@ do -- Library
                     Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewTextBox), PreviewTextBox, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewTextBox), PreviewTextBox, 0.075, false)
                 Library:TweenObject(PreviewTextBox, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], false}
@@ -4407,7 +4407,7 @@ do -- Library
                     Library.Objects[PreviewList] = {PreviewList, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewList, false), PreviewList, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewList, false), PreviewList, 0.075, false)
                 Library:TweenObject(PreviewList, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, Options.Size) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewList] = {PreviewList, OldValues[2], false}
@@ -4783,7 +4783,7 @@ do -- Library
                     Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewButton), PreviewButton, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewButton), PreviewButton, 0.075, false)
                 Library:TweenObject(PreviewButton, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], false}
