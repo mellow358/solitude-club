@@ -1781,13 +1781,13 @@ items.TitleHolder = arcane:Create("Frame", {
     BorderSizePixel = 0
 })
 
--- Layout makes them sit perfectly side-by-side
+-- The magic math from NewLibrary: List layout does the positioning perfectly
 arcane:Create("UIListLayout", {
     Parent = items.TitleHolder.Instance,
     FillDirection = Enum.FillDirection.Horizontal,
     VerticalAlignment = Enum.VerticalAlignment.Center,
     SortOrder = Enum.SortOrder.LayoutOrder,
-    Padding = UDim.new(0, 2) -- 2 pixels of perfect spacing
+    Padding = UDim.new(0, 0) -- No gap, text touches naturally
 })
 
 -- Title (solitude) - White
@@ -1795,14 +1795,14 @@ items.HubName = arcane:Create("TextLabel", {
     Parent = items.TitleHolder.Instance,
     Name = "\0",
     FontFace = arcane.Font,
-    TextColor3 = arcane.Theme.Text,
+    TextColor3 = arcane.Theme.Text, -- White
     Text = t15.Title,
     TextSize = 16,
     BackgroundTransparency = 1,
-    Size = UDim2.new(0, 0, 0, 18), -- Height 18 so it doesn't jitter
+    Size = UDim2.new(0, 0, 0, 18),
     AutomaticSize = Enum.AutomaticSize.X,
     LayoutOrder = 1,
-    TextXAlignment = Enum.TextXAlignment.Left,
+    TextXAlignment = Enum.TextXAlignment.Right,
     BorderSizePixel = 0
 }):AddToTheme({
     TextColor3 = "Text"
@@ -1813,7 +1813,7 @@ items.HubSuffix = arcane:Create("TextLabel", {
     Parent = items.TitleHolder.Instance,
     Name = "\0",
     FontFace = arcane.Font,
-    TextColor3 = arcane.Theme.Accent,
+    TextColor3 = arcane.Theme.Accent, -- Accent (Blue)
     Text = t15.Suffix,
     TextSize = 16,
     BackgroundTransparency = 1,
