@@ -418,18 +418,25 @@ do -- Library
         return UDim2.new(Position.X.Scale, ClampedX, Position.Y.Scale, ClampedY)
     end
     --
-    function Library:Fade(State, Table, MainUI, Speed)
+    function Library:Fade(State, Table, MainUI, Speed, BlockInput)
         local IsMainUI = Table == Library.Objects
-        --
-        MainUI.Active = State
-        --
+    
+        --// Only block input for the main window / popups.
+        --// Control containers (Toggle / Keybind / Dropdown / MultiBox / List rows)
+        --// must pass BlockInput = false, otherwise the container eats clicks
+        --// before they reach the child TextButton underneath.
+        if BlockInput ~= false then
+            MainUI.Active = State
+        end
+    
         if State then
             MainUI.Visible = true
         end
-        --
+    
         if IsMainUI then
             Library.UI.Faded = not State
         end
+    
         --  handle toggle transparency when fading out since im not using fade out for now as it causes fps issues
         if not State and IsMainUI then
             -- find all toggle elements and force them transparent immediately instead of waiting since some things may not leave instantly
@@ -441,7 +448,7 @@ do -- Library
                 end
             end
         end
-        --
+    
         for _, Object in Table do
             if not Object[3] then
                 if Object[1].ClassName == "Frame" and (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
@@ -483,7 +490,7 @@ do -- Library
                 end
             end
         end
-        --
+    
         if not State then
             task.delay(Speed, function()
                 if not MainUI.Parent then return end
@@ -2904,7 +2911,7 @@ do -- Library
                     Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075, false)
                 Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
@@ -3800,7 +3807,7 @@ do -- Library
                     Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075, false)
                 Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
@@ -3879,28 +3886,26 @@ do -- Library
         end
         --
         do -- Connections
-    Library:Connection(PreviewToggle.MouseEnter, function()
-        if Library.UI.Faded then return end
-        Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
-    end)
-    --
-    Library:Connection(PreviewToggle.MouseLeave, function()
-        if Library.UI.Faded then return end
-        Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(227, 227, 227)})
-    end)
-    --
-    -- MOBILE FIX: Attach to Text and Frame directly (supports Touch + Mouse)
-    local function OnToggleClick(input, gpe)
-        if gpe or Library.UI.Faded or Toggle.Hiding then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            Toggle:ToggleGUI()
+            Library:Connection(PreviewToggle.MouseEnter, function()
+                if Library.UI.Faded then return end
+                --
+                Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
+            end)
+            --
+            Library:Connection(PreviewToggle.MouseLeave, function()
+                if Library.UI.Faded then return end
+                --
+                Library:TweenObject(ToggleInline, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(227, 227, 227)})
+            end)
+            --
+            Library:Connection(Button_9.MouseButton1Click, function()
+                if Library.UI.Faded then return end
+                --
+                if Toggle.Hiding then return end
+                --
+                Toggle:ToggleGUI()
+            end)
         end
-    end
-
-    Library:Connection(ToggleName.InputBegan, OnToggleClick)
-    Library:Connection(PreviewToggle.InputBegan, OnToggleClick)
-    Library:Connection(Button_9.InputBegan, OnToggleClick)
-end
         --
         Toggle:ToggleGUI(Options.Default)
         --
