@@ -4573,17 +4573,9 @@ do -- Library
                         end
                     end)
                     --
-                    local function OnClick()
+                    Library:Connection(Button_912.MouseButton1Click, function()
                         if Library.UI.Faded then return end
                         ListValue:Activate()
-                    end
-                    
-                    Library:Connection(Button_912.MouseButton1Click, OnClick)
-                    Library:Connection(ValueName_1.InputBegan, function(input, gpe)
-                        if gpe then return end
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            OnClick()
-                        end
                     end)
                 end
             end
