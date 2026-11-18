@@ -5651,8 +5651,9 @@ do -- Library
                 table.insert(Tab.Sides[Options.Side].Sections, SectionOutline)
                 SectionOutline:SetAttribute("SmartFill", Options.Fill == true)
                 --
-                -- Smart sizing: fixed sections keep their requested height, while all
-                -- Fill sections sharing this parent divide the remaining height evenly.
+                -- Smart sizing is calculated independently for each column/container.
+                -- Fixed sections keep their requested height; Fill sections share only
+                -- the vertical space left after fixed sections, padding and list gaps.
                 local function UpdateSmartSectionSizing(Container)
                     if not Container or not Container.Parent then return end
 
@@ -5666,13 +5667,13 @@ do -- Library
                         if Child:IsA("UIListLayout") then
                             LayoutPadding = Child.Padding.Offset
                         elseif Child:IsA("UIPadding") then
-                            VerticalPadding = Child.PaddingTop.Offset + Child.PaddingBottom.Offset
-                        elseif Child:IsA("Frame") and Child.Name == "SectionOutline" then
+                            VerticalPadding += Child.PaddingTop.Offset + Child.PaddingBottom.Offset
+                        elseif Child:IsA("Frame") and Child.Name == "SectionOutline" and Child.Visible then
                             SectionCount += 1
                             if Child:GetAttribute("SmartFill") then
                                 table.insert(FillSections, Child)
                             else
-                                FixedHeight += Child.Size.Y.Offset
+                                FixedHeight += Child.AbsoluteSize.Y
                             end
                         end
                     end
@@ -5680,26 +5681,60 @@ do -- Library
                     if #FillSections == 0 then return end
 
                     local Gaps = math.max(0, SectionCount - 1) * LayoutPadding
-                    local AvailableHeight = Container.AbsoluteSize.Y - VerticalPadding - Gaps - FixedHeight
-                    local FillHeight = math.max(50, math.floor(AvailableHeight / #FillSections))
+                    local AvailableHeight = math.max(0, Container.AbsoluteSize.Y - VerticalPadding - Gaps - FixedHeight)
+                    local BaseHeight = math.floor(AvailableHeight / #FillSections)
+                    local Remainder = AvailableHeight - (BaseHeight * #FillSections)
 
-                    for _, FillSection in FillSections do
-                        FillSection.Size = UDim2.new(1, 0, 0, FillHeight)
+                    for Index, FillSection in ipairs(FillSections) do
+                        local ExtraPixel = Index <= Remainder and 1 or 0
+                        FillSection.Size = UDim2.new(1, 0, 0, BaseHeight + ExtraPixel)
                     end
                 end
 
-                SectionOutline.Size = UDim2.new(1, 0, 0, Options.Fill and 50 or Options.Size)
-                Library:Connection(SectionOutline.Parent:GetPropertyChangedSignal("AbsoluteSize"), function()
-                    UpdateSmartSectionSizing(SectionOutline.Parent)
+                local function BindSmartSizingContainer(Container)
+                    if not Container then return end
+                    Library:Connection(Container:GetPropertyChangedSignal("AbsoluteSize"), function()
+                        UpdateSmartSectionSizing(Container)
+                    end)
+                    Library:Connection(Container.ChildAdded, function(Child)
+                        if Child:IsA("Frame") and Child.Name == "SectionOutline" then
+                            task.defer(function()
+                                UpdateSmartSectionSizing(Container)
+                            end)
+                        end
+                    end)
+                    Library:Connection(Container.ChildRemoved, function(Child)
+                        if Child:IsA("Frame") and Child.Name == "SectionOutline" then
+                            task.defer(function()
+                                UpdateSmartSectionSizing(Container)
+                            end)
+                        end
+                    end)
+                end
+
+                SectionOutline.Size = UDim2.new(1, 0, 0, Options.Fill and 0 or Options.Size)
+                local SizingParent = SectionOutline.Parent
+                BindSmartSizingContainer(SizingParent)
+
+                Library:Connection(SectionOutline:GetPropertyChangedSignal("Parent"), function()
+                    UpdateSmartSectionSizing(SizingParent)
+                    SizingParent = SectionOutline.Parent
+                    BindSmartSizingContainer(SizingParent)
+                    task.defer(function()
+                        UpdateSmartSectionSizing(SizingParent)
+                    end)
                 end)
+
                 if not Options.Fill then
                     Library:Connection(SectionOutline:GetPropertyChangedSignal("Size"), function()
                         UpdateSmartSectionSizing(SectionOutline.Parent)
                     end)
                 end
+
                 task.defer(function()
                     UpdateSmartSectionSizing(SectionOutline.Parent)
                 end)
+                --
                 --
                 local SectionInline = Library:CreateObject("Frame", {
                     Name = "SectionInline",
