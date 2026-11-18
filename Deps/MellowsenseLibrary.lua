@@ -317,18 +317,6 @@ do -- Library
         return Table2
     end
     --
-    function Library:UpdateConfigList(List, Type)
-        for _, File in listfiles("gamesense/Configs") do
-            local FileName = File:gsub("\\", "/"):gsub("gamesense/Configs/", ""):gsub(".cfg", "")
-            --
-            if Type == "Remove" then
-                List:RemoveValue(FileName)
-            else
-                List:AddValue(FileName)
-            end
-        end
-    end
-    --
     function Library:GetObjectsTable(MainUI, AddMain, Ignored)
         local AddMain = AddMain or false
         local Ignored = Ignored or {}
@@ -430,25 +418,18 @@ do -- Library
         return UDim2.new(Position.X.Scale, ClampedX, Position.Y.Scale, ClampedY)
     end
     --
-    function Library:Fade(State, Table, MainUI, Speed, BlockInput)
+    function Library:Fade(State, Table, MainUI, Speed)
         local IsMainUI = Table == Library.Objects
-    
-        --// Only block input for the main window / popups.
-        --// Control containers (Toggle / Keybind / Dropdown / MultiBox / List rows)
-        --// must pass BlockInput = false, otherwise the container eats clicks
-        --// before they reach the child TextButton underneath.
-        if BlockInput ~= false then
-            MainUI.Active = State
-        end
-    
+        --
+        MainUI.Active = State
+        --
         if State then
             MainUI.Visible = true
         end
-    
+        --
         if IsMainUI then
             Library.UI.Faded = not State
         end
-    
         --  handle toggle transparency when fading out since im not using fade out for now as it causes fps issues
         if not State and IsMainUI then
             -- find all toggle elements and force them transparent immediately instead of waiting since some things may not leave instantly
@@ -460,7 +441,7 @@ do -- Library
                 end
             end
         end
-    
+        --
         for _, Object in Table do
             if not Object[3] then
                 if Object[1].ClassName == "Frame" and (Object[2]["BackgroundTransparency"] or 0) ~= 1 then
@@ -502,7 +483,7 @@ do -- Library
                 end
             end
         end
-    
+        --
         if not State then
             task.delay(Speed, function()
                 if not MainUI.Parent then return end
@@ -1724,7 +1705,7 @@ do -- Library
                     Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(KeybindObject), KeybindObject, 0.075)
                 Library:TweenObject(KeybindObject, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[KeybindObject] = {KeybindObject, OldValues[2], false}
@@ -2407,7 +2388,7 @@ do -- Library
                     Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewMultiBox_5), PreviewMultiBox_5, 0.075)
                 Library:TweenObject(PreviewMultiBox_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewMultiBox_5] = {PreviewMultiBox_5, OldValues[2], false}
@@ -2923,7 +2904,7 @@ do -- Library
                     Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewDropdown_5), PreviewDropdown_5, 0.075)
                 Library:TweenObject(PreviewDropdown_5, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 20) or UDim2.new(1, 0, 0, 31)) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewDropdown_5] = {PreviewDropdown_5, OldValues[2], false}
@@ -3174,6 +3155,8 @@ do -- Library
         if Options.Hiding then
             Dropdown:SetVisible(false)
         end
+        --
+        Dropdown:Toggle(true)
         --
         return Dropdown
     end
@@ -3480,7 +3463,7 @@ do -- Library
                 Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], true}
             end
             --
-            Library:Fade(Bool, Library:GetObjectsTable(PreviewSlider), PreviewSlider, 0.075, false)
+            Library:Fade(Bool, Library:GetObjectsTable(PreviewSlider), PreviewSlider, 0.075)
             Library:TweenObject(PreviewSlider, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and (Options.Name == "" and UDim2.new(1, 0, 0, 7) or UDim2.new(1, 0, 0, 20)) or UDim2.new(1, 0, 0, -10)}, function()
                 if not Bool then
                     Library.Objects[PreviewSlider] = {PreviewSlider, OldValues[2], false}
@@ -3819,7 +3802,7 @@ do -- Library
                     Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewToggle), PreviewToggle, 0.075)
                 Library:TweenObject(PreviewToggle, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewToggle] = {PreviewToggle, OldValues[2], false}
@@ -4010,7 +3993,7 @@ do -- Library
                     Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewLabel), PreviewLabel, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewLabel), PreviewLabel, 0.075)
                 Library:TweenObject(PreviewLabel, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, 8) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewLabel] = {PreviewLabel, OldValues[2], false}
@@ -4216,7 +4199,7 @@ do -- Library
                     Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewTextBox), PreviewTextBox, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewTextBox), PreviewTextBox, 0.075)
                 Library:TweenObject(PreviewTextBox, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewTextBox] = {PreviewTextBox, OldValues[2], false}
@@ -4419,7 +4402,7 @@ do -- Library
                     Library.Objects[PreviewList] = {PreviewList, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewList, false), PreviewList, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewList, false), PreviewList, 0.075)
                 Library:TweenObject(PreviewList, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and UDim2.new(1, 0, 0, Options.Size) or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewList] = {PreviewList, OldValues[2], false}
@@ -4573,9 +4556,17 @@ do -- Library
                         end
                     end)
                     --
-                    Library:Connection(Button_912.MouseButton1Click, function()
+                    local function OnClick()
                         if Library.UI.Faded then return end
                         ListValue:Activate()
+                    end
+                    
+                    Library:Connection(Button_912.MouseButton1Click, OnClick)
+                    Library:Connection(ValueName_1.InputBegan, function(input, gpe)
+                        if gpe then return end
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            OnClick()
+                        end
                     end)
                 end
             end
@@ -4787,7 +4778,7 @@ do -- Library
                     Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], true}
                 end
                 --
-                Library:Fade(Bool, Library:GetObjectsTable(PreviewButton), PreviewButton, 0.075, false)
+                Library:Fade(Bool, Library:GetObjectsTable(PreviewButton), PreviewButton, 0.075)
                 Library:TweenObject(PreviewButton, TweenInfo.new(Library.UI.TweenSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = Bool and Options.Size or UDim2.new(1, 0, 0, -10)}, function()
                     if not Bool then
                         Library.Objects[PreviewButton] = {PreviewButton, OldValues[2], false}
@@ -5052,24 +5043,32 @@ do -- Library
             Parent = SideBarMain
         })
         --
-        local Holder = Library:CreateObject("Frame", {
+        local Holder = Library:CreateObject("ScrollingFrame", {
             BackgroundTransparency = 1,
             Name = "Holder",
             BorderColor3 = Color3.fromRGB(0, 0, 0),
             Size = UDim2.new(1, 0, 1, 0),
             BorderSizePixel = 0,
             BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            Active = true,                                    -- << needed on mobile
+            ScrollingEnabled = true,
+            ScrollingDirection = Enum.ScrollingDirection.Y,
+            ScrollBarThickness = 0,                            -- hide scrollbar visually
+            ScrollBarImageTransparency = 1,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,       -- << grows as tabs are added
             Parent = SideBarMain
         })
-        --
+        
         local UIListLayout = Library:CreateObject("UIListLayout", {
             Padding = UDim.new(0, 0),
             SortOrder = Enum.SortOrder.LayoutOrder,
             Parent = Holder
         })
-        --
+        
         local UIPadding = Library:CreateObject("UIPadding", {
             PaddingTop = UDim.new(0, 10),
+            PaddingBottom = UDim.new(0, 10),                  -- << so last icon isn't glued to the bottom
             Parent = Holder
         })
         --
@@ -5127,181 +5126,84 @@ do -- Library
             Library:Resizable(Outline, ResizeButton, Options.MinResize, Options.MaxResize)
         end
         --
-        --// Mobile Buttons \\--
+        --// Mobile Toggle & Lock Buttons \\--
         if IsMobile then
-            local TextService = game:GetService("TextService")
-        
-            local MobileGui = Library:CreateObject("ScreenGui", {
-                ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
-                DisplayOrder = 1001,
-                ResetOnSpawn = false,
-                IgnoreGuiInset = true,
-                Name = "\0",
-                Parent = gethui()
-            }, true)
-        
-            local Floats = Library:CreateObject("Frame", {
-                BackgroundTransparency = 1,
-                Size = UDim2.fromScale(1, 1),
-                ZIndex = 10,
-                Active = false,
-                Parent = MobileGui,
-            }, true)
-        
-            local function GetTextBounds(Text, TextSize)
-                local Params = Instance.new("GetTextBoundsParams")
-                Params.Text = tostring(Text)
-                Params.RichText = false
-                Params.Font = Library.UI.NewFont
-                Params.Size = TextSize
-                Params.Width = 10000
-                local Success, Bounds = pcall(TextService.GetTextBoundsAsync, TextService, Params)
-                if Success and Bounds then
-                    return math.ceil(Bounds.X), math.ceil(Bounds.Y)
-                end
-                return math.ceil(#tostring(Text) * TextSize * 0.55), math.ceil(TextSize * 1.25)
-            end
-        
-            local function MakeDraggable(UI, DragFrame)
-                local StartPos, FramePos, Dragging, Changed
-        
-                Library:Connection(DragFrame.InputBegan, function(Input)
-                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                        and Input.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    StartPos = Input.Position
-                    FramePos = UI.Position
-                    Dragging = true
-        
-                    Changed = Input.Changed:Connect(function()
-                        if Input.UserInputState ~= Enum.UserInputState.End then return end
-                        Dragging = false
-                        if Changed and Changed.Connected then
-                            Changed:Disconnect()
-                            Changed = nil
-                        end
-                    end)
-                end)
-        
-                Library:Connection(UserInputService.InputChanged, function(Input)
-                    if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement
-                        or Input.UserInputType == Enum.UserInputType.Touch) then
-                        local Delta = Input.Position - StartPos
-                        UI.Position = UDim2.new(
-                            FramePos.X.Scale, FramePos.X.Offset + Delta.X,
-                            FramePos.Y.Scale, FramePos.Y.Offset + Delta.Y
-                        )
-                    end
-                end)
-            end
-        
-            local function AddDraggableButton(Text, Callback)
-                local Btn = Library:CreateObject("TextButton", {
+            local function CreateMobileButton(Text, Position, Order)
+                local BtnOutline = Library:CreateObject("Frame", {
+                    Name = "MobileBtn_" .. Text,
+                    AnchorPoint = Vector2.new(0, 0),
+                    Position = Position,
+                    Size = UDim2.new(0, 60, 0, 22),
+                    BorderSizePixel = 0,
+                    ZIndex = 10001,
+                    BackgroundColor3 = Color3.fromRGB(12, 12, 12),
+                    Parent = Library.UI.ScreenGUI
+                }, true)
+
+                local BtnInner = Library:CreateObject("Frame", {
+                    Name = "Inner",
+                    Position = UDim2.new(0, 1, 0, 1),
+                    Size = UDim2.new(1, -2, 1, -2),
+                    BorderSizePixel = 0,
+                    ZIndex = 10001,
                     BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-                    Position = UDim2.fromOffset(6, 6),
-                    TextSize = 16,
-                    Text = Text,
-                    FontFace = Library.UI.NewFont,
-                    TextColor3 = Library.Theme.Default.TextColor,
-                    ZIndex = 1,
-                    AutoButtonColor = false,
-                    Parent = Floats,
+                    Parent = BtnOutline
                 }, true)
-        
-                Library:CreateObject("UICorner", {
-                    CornerRadius = UDim.new(0, 4),
-                    Parent = Btn,
+
+                local BtnLabel = Library:CreateObject("TextLabel", {
+                    Name = "Text",
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    ZIndex = 10002,
+                    FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                    RichText = true,
+                    Text = "<b>" .. Text .. "</b>",
+                    TextColor3 = Color3.fromRGB(208, 208, 208),
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    Parent = BtnOutline
                 }, true)
-        
-                Library:CreateObject("UIStroke", {
-                    Color = Color3.fromRGB(40, 40, 40),
-                    Thickness = 1,
-                    ZIndex = 2,
-                    Parent = Btn,
+
+                local BtnClick = Library:CreateObject("TextButton", {
+                    Name = "Button",
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    Text = "",
+                    TextTransparency = 1,
+                    ZIndex = 10003,
+                    Parent = BtnOutline
                 }, true)
-                Library:CreateObject("UIStroke", {
-                    Color = Color3.fromRGB(12, 12, 12),
-                    Thickness = 1.5,
-                    ZIndex = 1,
-                    Parent = Btn,
-                }, true)
-        
-                local function ApplySize(NewText)
-                    local X, Y = GetTextBounds(NewText, 16)
-                    Btn.Text = NewText
-                    Btn.Size = UDim2.fromOffset(X * 2, Y * 2)
-                end
-                ApplySize(Text)
-        
-                MakeDraggable(Btn, Btn)
-        
-                local Button = { Button = Btn }
-                Button.SetText = function(self, NewText)
-                    ApplySize(NewText)
-                end
-        
-                local PressPosition
-                Library:Connection(Btn.InputBegan, function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1
-                        or Input.UserInputType == Enum.UserInputType.Touch then
-                        PressPosition = Btn.AbsolutePosition
-                    end
+
+                Library:Connection(BtnOutline.MouseEnter, function()
+                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                    })
                 end)
-        
-                Library:Connection(UserInputService.InputEnded, function(Input)
-                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-                        and Input.UserInputType ~= Enum.UserInputType.Touch then
-                        return
-                    end
-                    if not PressPosition then return end
-        
-                    local Moved = (Btn.AbsolutePosition - PressPosition).Magnitude
-                    PressPosition = nil
-        
-                    if Moved > 10 then return end
-                    if not Btn.Visible then return end
-                    if not (Btn.Parent and Btn.Parent.Parent) then return end
-        
-                    Callback(Button)
+                Library:Connection(BtnOutline.MouseLeave, function()
+                    Library:TweenObject(BtnInner, TweenInfo.new(0.15, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                    })
                 end)
-        
-                Library:Connection(Btn.MouseEnter, function()
-                    Btn.TextColor3 = Library.Theme.Default.Accent
-                end)
-                Library:Connection(Btn.MouseLeave, function()
-                    Btn.TextColor3 = Library.Theme.Default.TextColor
-                end)
-        
-                return Button
+
+                return BtnOutline, BtnLabel, BtnClick
             end
-        
-            local ToggleButton = AddDraggableButton("Toggle", function()
+
+            local ToggleBtn, ToggleLabel, ToggleClick = CreateMobileButton("Toggle", UDim2.new(0, 5, 0, 5), 1)
+            local LockBtn, LockLabel, LockClick = CreateMobileButton("Lock", UDim2.new(0, 5, 0, 32), 2)
+
+            Library.UI.MobileButtons = {ToggleBtn, LockBtn}
+
+            Library:Connection(ToggleClick.MouseButton1Click, function()
                 Window.Visible = not Window.Visible
                 Library:Fade(Window.Visible, Library.Objects, Outline, 0.2)
             end)
-        
-            -- MellowsenseLibrary has NO Lock system. The real drag is Roblox's built-in
-            -- Outline.Draggable. Locking = disable Draggable + Active on the window frame.
+
             local Locked = false
-            local LockButton
-            LockButton = AddDraggableButton("Lock", function()
+            Library:Connection(LockClick.MouseButton1Click, function()
                 Locked = not Locked
-        
-                -- Real properties this library actually uses to make the window draggable
                 Outline.Draggable = not Locked
-                Outline.Active = not Locked
-        
-                if LockButton then
-                    LockButton:SetText(Locked and "Unlock" or "Lock")
-                end
+                LockLabel.Text = Locked and "<b>Unlock</b>" or "<b>Lock</b>"
             end)
-        
-            ToggleButton.Button.AnchorPoint = Vector2.new(0, 0)
-            ToggleButton.Button.Position = UDim2.fromOffset(6, 6)
-        
-            LockButton.Button.AnchorPoint = Vector2.new(0, 0)
-            LockButton.Button.Position = UDim2.fromOffset(ToggleButton.Button.Size.X.Offset + 12, 6)
         end
         --
         function Window:CreateTab(Options)
@@ -5640,10 +5542,8 @@ do -- Library
                 local SectionOutline = Library:CreateObject("Frame", {
                     Name = "SectionOutline",
                     BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    Size = UDim2.new(1, 0, 0, (typeof(Options.Size) == "UDim2" and Options.Size.Y.Offset or tonumber(Options.Size) or 40)),
-                    -- Fixed sections must respect Options.Size. AutomaticSize.Y caused
-                    -- content to expand the section and push later sections off-screen.
-                    AutomaticSize = Enum.AutomaticSize.None,
+                    Size = UDim2.new(1, 0, 0, Options.Size),
+                    AutomaticSize = Options.Fill and Enum.AutomaticSize.None or Enum.AutomaticSize.Y,
                     BorderSizePixel = 0,
                     ZIndex = 1,
                     BackgroundColor3 = Color3.fromRGB(12, 12, 12),
@@ -5651,93 +5551,18 @@ do -- Library
                 })
                 --
                 table.insert(Tab.Sides[Options.Side].Sections, SectionOutline)
-                SectionOutline:SetAttribute("SmartFill", Options.Fill == true)
                 --
-                -- Smart sizing is calculated independently for each column/container.
-                -- Fixed sections keep their requested height; Fill sections share only
-                -- the vertical space left after fixed sections, padding and list gaps.
-                local function UpdateSmartSectionSizing(Container)
-                    if not Container or not Container.Parent then return end
-
-                    local FillSections = {}
-                    local FixedHeight = 0
-                    local SectionCount = 0
-                    local LayoutPadding = 0
-                    local VerticalPadding = 0
-
-                    for _, Child in Container:GetChildren() do
-                        if Child:IsA("UIListLayout") then
-                            LayoutPadding = Child.Padding.Offset
-                        elseif Child:IsA("UIPadding") then
-                            VerticalPadding += Child.PaddingTop.Offset + Child.PaddingBottom.Offset
-                        elseif Child:IsA("Frame") and Child.Name == "SectionOutline" and Child.Visible then
-                            SectionCount += 1
-                            if Child:GetAttribute("SmartFill") then
-                                table.insert(FillSections, Child)
-                            else
-                                FixedHeight += Child.AbsoluteSize.Y
-                            end
-                        end
+                task.delay(0.01, function()
+                    if Options.Fill == false then
+                        Tab.Sides[Options.Side].Sizes += SectionOutline.AbsoluteSize.Y + 19
                     end
-
-                    if #FillSections == 0 then return end
-
-                    local Gaps = math.max(0, SectionCount - 1) * LayoutPadding
-                    local AvailableHeight = math.max(0, Container.AbsoluteSize.Y - VerticalPadding - Gaps - FixedHeight)
-                    local BaseHeight = math.floor(AvailableHeight / #FillSections)
-                    local Remainder = AvailableHeight - (BaseHeight * #FillSections)
-
-                    for Index, FillSection in ipairs(FillSections) do
-                        local ExtraPixel = Index <= Remainder and 1 or 0
-                        FillSection.Size = UDim2.new(1, 0, 0, BaseHeight + ExtraPixel)
+                    --
+                    if Options.Fill then
+                        SectionOutline.Size = UDim2.new(1, 0, 1, -(Tab.Sides[Options.Side].Sizes))
+                    else
+                        SectionOutline.Size = UDim2.new(1, 0, 0, Options.Size)
                     end
-                end
-
-                local function BindSmartSizingContainer(Container)
-                    if not Container then return end
-                    Library:Connection(Container:GetPropertyChangedSignal("AbsoluteSize"), function()
-                        UpdateSmartSectionSizing(Container)
-                    end)
-                    Library:Connection(Container.ChildAdded, function(Child)
-                        if Child:IsA("Frame") and Child.Name == "SectionOutline" then
-                            task.defer(function()
-                                UpdateSmartSectionSizing(Container)
-                            end)
-                        end
-                    end)
-                    Library:Connection(Container.ChildRemoved, function(Child)
-                        if Child:IsA("Frame") and Child.Name == "SectionOutline" then
-                            task.defer(function()
-                                UpdateSmartSectionSizing(Container)
-                            end)
-                        end
-                    end)
-                end
-
-                local FixedSectionHeight = typeof(Options.Size) == "UDim2" and Options.Size.Y.Offset or tonumber(Options.Size) or 40
-                SectionOutline.Size = UDim2.new(1, 0, 0, Options.Fill and 0 or FixedSectionHeight)
-                local SizingParent = SectionOutline.Parent
-                BindSmartSizingContainer(SizingParent)
-
-                Library:Connection(SectionOutline:GetPropertyChangedSignal("Parent"), function()
-                    UpdateSmartSectionSizing(SizingParent)
-                    SizingParent = SectionOutline.Parent
-                    BindSmartSizingContainer(SizingParent)
-                    task.defer(function()
-                        UpdateSmartSectionSizing(SizingParent)
-                    end)
                 end)
-
-                if not Options.Fill then
-                    Library:Connection(SectionOutline:GetPropertyChangedSignal("Size"), function()
-                        UpdateSmartSectionSizing(SectionOutline.Parent)
-                    end)
-                end
-
-                task.defer(function()
-                    UpdateSmartSectionSizing(SectionOutline.Parent)
-                end)
-                --
                 --
                 local SectionInline = Library:CreateObject("Frame", {
                     Name = "SectionInline",
@@ -6075,6 +5900,31 @@ do -- Library
                         Section:UpdateSection()
                     end)
                     --
+                    Library:Connection(RunService.PreRender, function() -- fastest option
+                        if SectionOutline.AbsoluteSize.Y >= ((SectionOutline.Parent.AbsoluteSize.Y - Tab.Sides[Options.Side].Sizes) - 38) then
+                            if Tab.SubSectionEnabled then
+                                if #Tab.Sides[Options.Side].Sections <= 3 then
+                                    SectionOutline.Size = UDim2.new(1, 0, 1, -Tab.Sides[Options.Side].Sizes)
+                                end
+                            else
+                                SectionOutline.Size = UDim2.new(1, 0, 1, -Tab.Sides[Options.Side].Sizes)
+                            end
+                        end
+                        --
+                        for _, Child in SectionOutline.Parent:GetChildren() do
+                            if Child:IsA("Frame") and Child ~= SectionOutline then
+                                if Library:CheckFrameFirst(SectionOutline, Child) then
+                                    if Child.AbsoluteSize.Y >= ((Child.Parent.AbsoluteSize.Y - Tab.Sides[Options.Side].Sizes) - 38) then
+                                        Child.Size = UDim2.new(Child.Size.X.Scale, Child.Size.X.Offset, 0, math.max(50, (SectionOutline.Parent.AbsoluteSize.Y - SectionOutline.AbsoluteSize.Y) - 57))
+                                    end
+                                    --
+                                    if Child.AbsoluteSize.Y == 50 and (SectionOutline.AbsoluteSize.Y == SectionOutline.Parent.AbsoluteSize.Y - 107) then
+                                        SectionOutline.Size = UDim2.new(SectionOutline.Size.X.Scale, SectionOutline.Size.X.Offset, 0, SectionOutline.Parent.AbsoluteSize.Y - 107)
+                                    end
+                                end
+                            end
+                        end
+                    end)
                     --
                     Library:Connection(SectionScrolling:GetPropertyChangedSignal("AbsoluteCanvasSize"), function()
                         Section:UpdateSection()
