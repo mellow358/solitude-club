@@ -5640,8 +5640,10 @@ do -- Library
                 local SectionOutline = Library:CreateObject("Frame", {
                     Name = "SectionOutline",
                     BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    Size = UDim2.new(1, 0, 0, Options.Size),
-                    AutomaticSize = Options.Fill and Enum.AutomaticSize.None or Enum.AutomaticSize.Y,
+                    Size = UDim2.new(1, 0, 0, (typeof(Options.Size) == "UDim2" and Options.Size.Y.Offset or tonumber(Options.Size) or 40)),
+                    -- Fixed sections must respect Options.Size. AutomaticSize.Y caused
+                    -- content to expand the section and push later sections off-screen.
+                    AutomaticSize = Enum.AutomaticSize.None,
                     BorderSizePixel = 0,
                     ZIndex = 1,
                     BackgroundColor3 = Color3.fromRGB(12, 12, 12),
@@ -5712,7 +5714,8 @@ do -- Library
                     end)
                 end
 
-                SectionOutline.Size = UDim2.new(1, 0, 0, Options.Fill and 0 or Options.Size)
+                local FixedSectionHeight = typeof(Options.Size) == "UDim2" and Options.Size.Y.Offset or tonumber(Options.Size) or 40
+                SectionOutline.Size = UDim2.new(1, 0, 0, Options.Fill and 0 or FixedSectionHeight)
                 local SizingParent = SectionOutline.Parent
                 BindSmartSizingContainer(SizingParent)
 
