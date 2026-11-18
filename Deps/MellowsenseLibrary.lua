@@ -5649,17 +5649,56 @@ do -- Library
                 })
                 --
                 table.insert(Tab.Sides[Options.Side].Sections, SectionOutline)
+                SectionOutline:SetAttribute("SmartFill", Options.Fill == true)
                 --
-                task.delay(0.01, function()
-                    if Options.Fill == false then
-                        Tab.Sides[Options.Side].Sizes += SectionOutline.AbsoluteSize.Y + 19
+                -- Smart sizing: fixed sections keep their requested height, while all
+                -- Fill sections sharing this parent divide the remaining height evenly.
+                local function UpdateSmartSectionSizing(Container)
+                    if not Container or not Container.Parent then return end
+
+                    local FillSections = {}
+                    local FixedHeight = 0
+                    local SectionCount = 0
+                    local LayoutPadding = 0
+                    local VerticalPadding = 0
+
+                    for _, Child in Container:GetChildren() do
+                        if Child:IsA("UIListLayout") then
+                            LayoutPadding = Child.Padding.Offset
+                        elseif Child:IsA("UIPadding") then
+                            VerticalPadding = Child.PaddingTop.Offset + Child.PaddingBottom.Offset
+                        elseif Child:IsA("Frame") and Child.Name == "SectionOutline" then
+                            SectionCount += 1
+                            if Child:GetAttribute("SmartFill") then
+                                table.insert(FillSections, Child)
+                            else
+                                FixedHeight += Child.Size.Y.Offset
+                            end
+                        end
                     end
-                    --
-                    if Options.Fill then
-                        SectionOutline.Size = UDim2.new(1, 0, 1, -(Tab.Sides[Options.Side].Sizes))
-                    else
-                        SectionOutline.Size = UDim2.new(1, 0, 0, Options.Size)
+
+                    if #FillSections == 0 then return end
+
+                    local Gaps = math.max(0, SectionCount - 1) * LayoutPadding
+                    local AvailableHeight = Container.AbsoluteSize.Y - VerticalPadding - Gaps - FixedHeight
+                    local FillHeight = math.max(50, math.floor(AvailableHeight / #FillSections))
+
+                    for _, FillSection in FillSections do
+                        FillSection.Size = UDim2.new(1, 0, 0, FillHeight)
                     end
+                end
+
+                SectionOutline.Size = UDim2.new(1, 0, 0, Options.Fill and 50 or Options.Size)
+                Library:Connection(SectionOutline.Parent:GetPropertyChangedSignal("AbsoluteSize"), function()
+                    UpdateSmartSectionSizing(SectionOutline.Parent)
+                end)
+                if not Options.Fill then
+                    Library:Connection(SectionOutline:GetPropertyChangedSignal("Size"), function()
+                        UpdateSmartSectionSizing(SectionOutline.Parent)
+                    end)
+                end
+                task.defer(function()
+                    UpdateSmartSectionSizing(SectionOutline.Parent)
                 end)
                 --
                 local SectionInline = Library:CreateObject("Frame", {
@@ -5998,31 +6037,6 @@ do -- Library
                         Section:UpdateSection()
                     end)
                     --
-                    Library:Connection(RunService.PreRender, function() -- fastest option
-                        if SectionOutline.AbsoluteSize.Y >= ((SectionOutline.Parent.AbsoluteSize.Y - Tab.Sides[Options.Side].Sizes) - 38) then
-                            if Tab.SubSectionEnabled then
-                                if #Tab.Sides[Options.Side].Sections <= 3 then
-                                    SectionOutline.Size = UDim2.new(1, 0, 1, -Tab.Sides[Options.Side].Sizes)
-                                end
-                            else
-                                SectionOutline.Size = UDim2.new(1, 0, 1, -Tab.Sides[Options.Side].Sizes)
-                            end
-                        end
-                        --
-                        for _, Child in SectionOutline.Parent:GetChildren() do
-                            if Child:IsA("Frame") and Child ~= SectionOutline then
-                                if Library:CheckFrameFirst(SectionOutline, Child) then
-                                    if Child.AbsoluteSize.Y >= ((Child.Parent.AbsoluteSize.Y - Tab.Sides[Options.Side].Sizes) - 38) then
-                                        Child.Size = UDim2.new(Child.Size.X.Scale, Child.Size.X.Offset, 0, math.max(50, (SectionOutline.Parent.AbsoluteSize.Y - SectionOutline.AbsoluteSize.Y) - 57))
-                                    end
-                                    --
-                                    if Child.AbsoluteSize.Y == 50 and (SectionOutline.AbsoluteSize.Y == SectionOutline.Parent.AbsoluteSize.Y - 107) then
-                                        SectionOutline.Size = UDim2.new(SectionOutline.Size.X.Scale, SectionOutline.Size.X.Offset, 0, SectionOutline.Parent.AbsoluteSize.Y - 107)
-                                    end
-                                end
-                            end
-                        end
-                    end)
                     --
                     Library:Connection(SectionScrolling:GetPropertyChangedSignal("AbsoluteCanvasSize"), function()
                         Section:UpdateSection()
