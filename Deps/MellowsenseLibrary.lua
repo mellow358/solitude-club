@@ -4901,7 +4901,7 @@ do -- Library
     function Library:Window(Options)
         Options = Library:Validate({
             Name = "solitude.club",
-            Size = IsMobile and UDim2.new(0, 650, 0, 612) or UDim2.new(0, 700, 0, 612),
+            Size = UDim2.new(0, 700, 0, 612),
             MinResize = UDim2.new(0, 600, 0, 500),
             MaxResize = UDim2.new(0, 10000, 0, 10000),
             CloseBind = Enum.KeyCode.Insert,
@@ -5052,32 +5052,24 @@ do -- Library
             Parent = SideBarMain
         })
         --
-        local Holder = Library:CreateObject("ScrollingFrame", {
+        local Holder = Library:CreateObject("Frame", {
             BackgroundTransparency = 1,
             Name = "Holder",
             BorderColor3 = Color3.fromRGB(0, 0, 0),
             Size = UDim2.new(1, 0, 1, 0),
             BorderSizePixel = 0,
             BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-            Active = true,                                    -- << needed on mobile
-            ScrollingEnabled = true,
-            ScrollingDirection = Enum.ScrollingDirection.Y,
-            ScrollBarThickness = 0,                            -- hide scrollbar visually
-            ScrollBarImageTransparency = 1,
-            CanvasSize = UDim2.new(0, 0, 0, 0),
-            AutomaticCanvasSize = Enum.AutomaticSize.Y,       -- << grows as tabs are added
             Parent = SideBarMain
         })
-        
+        --
         local UIListLayout = Library:CreateObject("UIListLayout", {
             Padding = UDim.new(0, 0),
             SortOrder = Enum.SortOrder.LayoutOrder,
             Parent = Holder
         })
-        
+        --
         local UIPadding = Library:CreateObject("UIPadding", {
             PaddingTop = UDim.new(0, 10),
-            PaddingBottom = UDim.new(0, 10),                  -- << so last icon isn't glued to the bottom
             Parent = Holder
         })
         --
